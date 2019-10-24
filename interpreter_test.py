@@ -1,4 +1,9 @@
-from interpreter import BinOp, Num, INTEGER, Token, Interpreter, UnaryOp, MINUS, MUL, PLUS
+from interpreter import BinOp, Num, UnaryOp
+from interpreter import INTEGER, MINUS, MUL, PLUS
+from interpreter import Token
+from interpreter import Tokenizer
+from interpreter import Parser
+from interpreter import Interpreter
 
 
 def test_binop():
@@ -30,6 +35,9 @@ def test_unaryop():
     print(res)
 
 
-if __name__ == "__main__":
-    test_binop()
-    test_unaryop()
+def test_newparser():
+    # BEGIN a := 3; b := 4; c := a + b; END
+    t = Tokenizer('BEGIN a := 3; BEGIN b := 4 END; c := a + b END.')
+    p = Parser(t)
+    res = p.parse()
+    assert res is not None

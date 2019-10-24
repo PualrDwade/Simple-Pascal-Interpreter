@@ -1,8 +1,8 @@
-# Token types
-#
-# EOF (end-of-file) token is used to indicate that
-# there is no more input left for lexical analysis(tokenizer)
+# Tokens for Tokenizer analysis result
+
 INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = 'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LPAREN', 'RPAREN', 'EOF'
+
+BEGIN, END, DOT, ID, ASSIGN, SEMI = 'BEGIN', 'END', 'DOT', 'ID', 'ASSIGN', 'SEMI'
 
 
 class Token(object):
@@ -30,6 +30,13 @@ class Token(object):
         return self.__str__()
 
 
+# reserved keywords
+RESERVED_KEYWORDS = {
+    'BEGIN': Token(BEGIN, 'BEGIN'),
+    'END': Token(END, 'END'),
+}
+
+
 class Tokenizer(object):
     '''
     Tokenizer analysis given text and parse it to tokens
@@ -45,6 +52,23 @@ class Tokenizer(object):
 
     def error(self):
         raise Exception('Invalid character')
+
+    def peek(self) -> str:
+        """peek return the next character but don't change the pos."""
+        peek_pos = self.pos + 1
+        if peek_pos is len(self.text):
+            return None
+        else:
+            return self.text[peek_pos]
+
+    def identify(self) -> Token:
+        """Handle identifiers and reserved keywords"""
+        result = ''
+        while result is not None and self.current_char.isalnum():
+            result += self.current_char
+            self.advance()
+
+        return RESERVED_KEYWORDS.get(result, Token(ID, result))
 
     def advance(self):
         """Advance the `pos` pointer and set the `current_char` variable."""
@@ -106,6 +130,22 @@ class Tokenizer(object):
                 self.advance()
                 return Token(RPAREN, ')')
 
+            if self.current_char.isalpha():
+                return self.identify()
+
+            if self.current_char is ':' and self.peek() is '=':
+                self.advance()
+                self.advance()
+                return Token(ASSIGN, ':=')
+
+            if self.current_char is ';':
+                self.advance()
+                return Token(SEMI, ';')
+
+            if self.current_char is '.':
+                self.advance()
+                return Token(DOT, '.')
+
             self.error()
 
         return Token(EOF, None)
@@ -134,9 +174,60 @@ class Num(AST):
         self.token = token
 
 
+class Compound(AST):
+    def __init__(self):
+        self.childrens = []  # use list to combine many compound
+
+
+class Var(AST):
+    def __init__(self, token: Token):
+        self.token = token
+        self.value = token.value  # self.value holds the variable's name
+
+
+class Assign(AST):
+    def __init__(self, left: AST, op: Token, right: AST):
+        self.left = left
+        self.token = self.op = op
+        self.right = right
+
+
+class NoOp(AST):
+    pass
+
+
 class Parser(object):
     '''
     Parser parse given tokens to AST
+
+    gramma is here:
+
+    program : compound_statement DOT
+
+    compound_statement : BEGIN statement_list END
+
+    statement_list : statement
+                   | statement SEMI statement_list
+
+    statement : compound_statement
+              | assignment_statement
+              | empty
+
+    assignment_statement : variable ASSIGN expr
+
+    empty :
+
+    expr: term ((PLUS | MINUS) term)*
+
+    term: factor ((MUL | DIV) factor)*
+
+    factor : PLUS factor
+           | MINUS factor
+           | INTEGER
+           | LPAREN expr RPAREN
+           | variable
+
+    variable: ID
     '''
 
     def __init__(self, tokenizer: Tokenizer):
@@ -156,7 +247,79 @@ class Parser(object):
         else:
             self.error()
 
+    def program(self) -> AST:
+        """program : compound_statement DOT"""
+        node = self.compound_statements()
+        self.eat(DOT)
+        return node
+
+    def compound_statements(self) -> AST:
+        """compound_statement: BEGIN statement_list END"""
+        self.eat(BEGIN)
+        nodes = self.statement_list()
+        self.eat(END)
+        root = Compound()
+        for node in nodes:
+            root.childrens.append(node)
+        return root
+
+    def statement_list(self) -> list:
+        """
+        statement_list : statement
+                       | statement SEMI statement_list
+        """
+        node = self.statement()
+        results = [node]
+        if self.current_token.type is not SEMI:
+            return results
+        self.eat(SEMI)
+        results.extend(self.statement_list())
+        return results
+
+    def statement(self) -> AST:
+        """
+        statement : compound_statement
+                  | assignment_statement
+                  | empty
+        """
+        if self.current_token.type is BEGIN:
+            node = self.compound_statements()
+        elif self.current_token.type is ID:
+            node = self.assignment_statement()
+        else:
+            node = self.empty()
+        return node
+
+    def assignment_statement(self) -> AST:
+        """
+        assignment_statement : variable ASSIGN expr
+        """
+        left = self.variable()
+        op = self.current_token
+        self.eat(ASSIGN)
+        right = self.expr()
+        return Assign(left=left, op=op, right=right)
+
+    def variable(self) -> AST:
+        """
+        variable : ID
+        """
+        node = Var(self.current_token)
+        self.eat(ID)
+        return node
+
+    def empty(self) -> AST:
+        """An empty production"""
+        return NoOp()
+
     def factor(self) -> AST:
+        """
+        factor: PLUS  factor
+              | MINUS factor
+              | INTEGER
+              | LPAREN expr RPAREN
+              | variable
+        """
         token = self.current_token
         if token.type is PLUS:
             self.eat(PLUS)
@@ -172,6 +335,10 @@ class Parser(object):
             node = self.expr()
             self.eat(RPAREN)
             return node
+        elif token.type is ID:
+            return self.variable()
+        else:
+            self.error()
 
     def term(self) -> AST:
         """term : factor ((MUL | DIV) factor)*"""
@@ -204,7 +371,10 @@ class Parser(object):
         return node
 
     def parse(self) -> AST:
-        return self.expr()
+        node = self.program()
+        if self.current_token.type != EOF:
+            self.error()
+        return node
 
 
 class Visitor(object):
@@ -218,6 +388,8 @@ class Visitor(object):
             return self.visit_binop(node)
         elif isinstance(node, Num):
             return self.visit_num(node)
+        elif isinstance(node, UnaryOp):
+            return self.visit_unaryop(node)
 
     def visit_binop(self, node: BinOp) -> int:
         pass
@@ -251,7 +423,10 @@ class Interpreter(Visitor):
         return node.token.value
 
     def visit_unaryop(self, node: UnaryOp) -> int:
-        return +self.visit(node.factor) if node.op.type is PLUS else -self.visit(node.factor)
+        if node.op.type is PLUS:
+            return +self.visit(node.factor)
+        else:
+            return -self.visit(node.factor)
 
     def interpret(self) -> int:
         ast = self.parser.parse()
