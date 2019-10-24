@@ -68,7 +68,7 @@ class Tokenizer(object):
             result += self.current_char
             self.advance()
 
-        return RESERVED_KEYWORDS.get(result, Token(ID, result))
+        return RESERVED_KEYWORDS.get(result, default=Token(ID, result))
 
     def advance(self):
         """Advance the `pos` pointer and set the `current_char` variable."""
