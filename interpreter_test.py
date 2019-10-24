@@ -18,7 +18,7 @@ def test_binop():
 
     res = interpreter.visit(plus_node)
 
-    print(res)
+    assert res is 17
 
 
 def test_unaryop():
@@ -32,7 +32,7 @@ def test_unaryop():
 
     res = interpreter.visit(minus_node)
 
-    print(res)
+    assert res is 7
 
 
 def test_newparser():

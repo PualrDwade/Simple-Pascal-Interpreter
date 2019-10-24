@@ -64,7 +64,7 @@ class Tokenizer(object):
     def identify(self) -> Token:
         """Handle identifiers and reserved keywords"""
         result = ''
-        while result is not None and self.current_char.isalnum():
+        while self.current_char is not None and self.current_char.isalnum():
             result += self.current_char
             self.advance()
 
@@ -390,6 +390,8 @@ class Visitor(object):
             return self.visit_num(node)
         elif isinstance(node, UnaryOp):
             return self.visit_unaryop(node)
+        else:
+            raise Exception("Invalid AST node")
 
     def visit_binop(self, node: BinOp) -> int:
         pass
