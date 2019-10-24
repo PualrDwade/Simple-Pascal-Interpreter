@@ -64,7 +64,7 @@ class Tokenizer(object):
     def identify(self) -> Token:
         """Handle identifiers and reserved keywords"""
         result = ''
-        while self.current_char is not None and self.current_char.isalnum():
+        while self.current_char is not None and (self.current_char.isalnum() or self.current_char is '_'):
             result += self.current_char
             self.advance()
 
