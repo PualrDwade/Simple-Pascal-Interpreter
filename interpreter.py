@@ -1,3 +1,4 @@
+import sys
 # Tokens for Tokenizer analysis result
 
 INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = 'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LPAREN', 'RPAREN', 'EOF'
@@ -68,7 +69,7 @@ class Tokenizer(object):
             result += self.current_char
             self.advance()
 
-        return RESERVED_KEYWORDS.get(result, default=Token(ID, result))
+        return RESERVED_KEYWORDS.get(result, Token(ID, result))
 
     def advance(self):
         """Advance the `pos` pointer and set the `current_char` variable."""
@@ -383,23 +384,43 @@ class Visitor(object):
     each concrete visitor should implement its visit method
     '''
 
-    def visit(self, node: AST) -> int:
+    def visit(self, node: AST):
         if isinstance(node, BinOp):
             return self.visit_binop(node)
         elif isinstance(node, Num):
             return self.visit_num(node)
         elif isinstance(node, UnaryOp):
             return self.visit_unaryop(node)
+        elif isinstance(node, Compound):
+            return self.visit_compound(node)
+        elif isinstance(node, Var):
+            return self.visit_var(node)
+        elif isinstance(node, Assign):
+            return self.visit_assign(node)
+        elif isinstance(node, NoOp):
+            return self.visit_noop(node)
         else:
             raise Exception("Invalid AST node")
 
-    def visit_binop(self, node: BinOp) -> int:
+    def visit_binop(self, node: BinOp):
         pass
 
-    def visit_num(self, node: Num) -> int:
+    def visit_num(self, node: Num):
         pass
 
-    def visit_unaryop(self, node: UnaryOp) -> int:
+    def visit_unaryop(self, node: UnaryOp):
+        pass
+
+    def visit_compound(self, node: Compound):
+        pass
+
+    def visit_var(self, node: Var):
+        pass
+
+    def visit_assign(self, node: Assign):
+        pass
+
+    def visit_noop(self, node: NoOp):
         pass
 
 
@@ -410,8 +431,9 @@ class Interpreter(Visitor):
 
     def __init__(self, parser: Parser):
         self.parser = parser
+        self.GLOBAL_SCOPE = {}  # symbol table
 
-    def visit_binop(self, node: BinOp) -> int:
+    def visit_binop(self, node: BinOp):
         if node.op.type is PLUS:
             return self.visit(node.left) + self.visit(node.right)
         elif node.op.type is MINUS:
@@ -421,34 +443,51 @@ class Interpreter(Visitor):
         elif node.op.type is DIV:
             return self.visit(node.left) // self.visit(node.right)
 
-    def visit_num(self, node: Num) -> int:
+    def visit_num(self, node: Num):
         return node.token.value
 
-    def visit_unaryop(self, node: UnaryOp) -> int:
+    def visit_unaryop(self, node: UnaryOp):
         if node.op.type is PLUS:
             return +self.visit(node.factor)
         else:
             return -self.visit(node.factor)
+
+    def visit_compound(self, node: Compound):
+        for child in node.childrens:
+            self.visit(child)
+
+    def visit_var(self, node: Var):
+        val = self.GLOBAL_SCOPE[node.value]  # get value by variable's name
+        if val is not None:
+            return val
+        raise NameError(repr(node.value))
+
+    def visit_assign(self, node: Assign):
+        var_name = node.left.value  # get variable's name
+        self.GLOBAL_SCOPE[var_name] = self.visit(node.right)
+
+    def visit_noop(self, node: NoOp):
+        pass
 
     def interpret(self) -> int:
         ast = self.parser.parse()
         return self.visit(ast)
 
 
+def show_help():
+    print('simple pascal interpret for version 1.0')
+
+
 def main():
-    while True:
-        try:
-            text = input('calc> ')
-        except EOFError:
-            break
-        if not text:
-            continue
-        tokenizer = Tokenizer(text)
-        parser = Parser(tokenizer)
-        interpreter = Interpreter(parser)
-        result = interpreter.interpret()
-        print(result)
+    if len(sys.argv) is 1:
+        show_help()
+        return
+    text = open(sys.argv[1], 'r').read()
+    tokenizer = Tokenizer(text)
+    parser = Parser(tokenizer)
+    interpreter = Interpreter(parser)
+    interpreter.interpret()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
