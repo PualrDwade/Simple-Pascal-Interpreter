@@ -36,8 +36,19 @@ def test_unaryop():
 
 
 def test_newparser():
-    # BEGIN a := 3; b := 4; c := a + b; END
-    t = Tokenizer('BEGIN a := 3; BEGIN b := 4 END; c := a + b END.')
+    text = """\
+    PROGRAM Part10AST;
+    VAR
+        a, b : INTEGER;
+        y    : REAL;
+
+    BEGIN
+        a := 2;
+        b := 10 * a + 10 * a // 4;
+        y := 20 / 7 + 3.14;
+    END.
+    """
+    t = Tokenizer(text)
     p = Parser(t)
     res = p.parse()
     assert res is not None

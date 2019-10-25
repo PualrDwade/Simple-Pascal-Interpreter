@@ -241,44 +241,35 @@ class Assign(AST):
         self.right = right
 
 
+class Type(AST):
+    def __init__(self, token: Token):
+        self.token = token
+        self.type = token.value
+
+
+class VarDecl(AST):
+    def __init__(self, var_node: Var, type_node: Type):
+        self.var_node = var_node
+        self.type_node = type_node
+
+
+class Block(AST):
+    def __init__(self, declarations: [VarDecl], compound_statement: Compound):
+        self.declarations = declarations
+        self.compound_statement = compound_statement
+
+
+class Program(AST):
+    def __init__(self, name, block: Block):
+        self.name = name
+        self.block = block
+
+
 class NoOp(AST):
     pass
 
 
 class Parser(object):
-    '''
-    Parser parse given tokens to AST
-
-    gramma is here:
-
-    program : compound_statement DOT
-
-    compound_statement : BEGIN statement_list END
-
-    statement_list : statement
-                   | statement SEMI statement_list
-
-    statement : compound_statement
-              | assignment_statement
-              | empty
-
-    assignment_statement : variable ASSIGN expr
-
-    empty :
-
-    expr: term ((PLUS | MINUS) term)*
-
-    term: factor ((MUL | DIV) factor)*
-
-    factor : PLUS factor
-           | MINUS factor
-           | INTEGER
-           | LPAREN expr RPAREN
-           | variable
-
-    variable: ID
-    '''
-
     def __init__(self, tokenizer: Tokenizer):
         self.tokenizer = tokenizer
         self.current_token = self.tokenizer.get_next_token()
@@ -296,13 +287,64 @@ class Parser(object):
         else:
             self.error()
 
-    def program(self) -> AST:
-        """program : compound_statement DOT"""
-        node = self.compound_statements()
+    def program(self) -> Program:
+        """program : PROGRAM variable SEMI block DOT"""
+        self.eat('PROGRAM')
+        var_node = self.variable()
+        programe_name = var_node.value  # value hold the variable's name
+        self.eat(SEMI)
+        block = self.block()
         self.eat(DOT)
-        return node
+        return Program(programe_name, block)
 
-    def compound_statements(self) -> AST:
+    def block(self) -> Block:
+        """block : declarations compound_statement"""
+        declarations = self.declarations()
+        compound_statement = self.compound_statement()
+        return Block(declarations, compound_statement)
+
+    def declarations(self) -> [VarDecl]:
+        """declarations : VAR (variable_declaration SEMI)+
+                    | empty
+        """
+        declarations = []
+
+        if self.current_token.type is 'VAR':
+            self.eat('VAR')
+            while self.current_token.type is ID:
+                declarations.extend(self.variable_declaration())
+                self.eat(SEMI)
+
+        return declarations
+
+    def variable_declaration(self) -> [VarDecl]:
+        """variable_declaration : ID (COMMA ID)* COLON type_spec"""
+        var_nodes = [Var(self.current_token)]
+        self.eat(ID)
+
+        while self.current_token.type is COMMA:
+            self.eat(COMMA)
+            var_nodes.append(Var(self.current_token))
+            self.eat(ID)
+
+        self.eat(COLON)
+
+        type_node = self.type_spec()
+
+        return [VarDecl(var_node, type_node) for var_node in var_nodes]
+
+    def type_spec(self) -> Type:
+        """type_spec : INTEGER
+                     | REAL
+        """
+        token = self.current_token
+        if token.type is 'INTEGER':
+            self.eat('INTEGER')
+        else:
+            self.eat('REAL')
+        return Type(token)
+
+    def compound_statement(self) -> Compound:
         """compound_statement: BEGIN statement_list END"""
         self.eat('BEGIN')
         nodes = self.statement_list()
@@ -312,7 +354,7 @@ class Parser(object):
             root.childrens.append(node)
         return root
 
-    def statement_list(self) -> list:
+    def statement_list(self) -> [AST]:
         """
         statement_list : statement
                        | statement SEMI statement_list
@@ -332,7 +374,7 @@ class Parser(object):
                   | empty
         """
         if self.current_token.type is 'BEGIN':
-            node = self.compound_statements()
+            node = self.compound_statement()
         elif self.current_token.type is ID:
             node = self.assignment_statement()
         else:
@@ -349,7 +391,7 @@ class Parser(object):
         right = self.expr()
         return Assign(left=left, op=op, right=right)
 
-    def variable(self) -> AST:
+    def variable(self) -> Var:
         """
         variable : ID
         """
@@ -365,7 +407,8 @@ class Parser(object):
         """
         factor: PLUS  factor
               | MINUS factor
-              | INTEGER
+              | INTEGER_CONST
+              | REAL_CONST
               | LPAREN expr RPAREN
               | variable
         """
@@ -378,7 +421,10 @@ class Parser(object):
             return UnaryOp(op=token, factor=self.factor())
         elif token.type is INTEGER_CONST:
             self.eat(INTEGER_CONST)
-            return Num(token=token)
+            return Num(token)
+        elif token.type is REAL_CONST:
+            self.eat(REAL_CONST)
+            return Num(token)
         elif token.type is LPAREN:
             self.eat(LPAREN)
             node = self.expr()
