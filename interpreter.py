@@ -1,9 +1,22 @@
 import sys
+
 # Tokens for Tokenizer analysis result
-
-INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = 'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', 'LPAREN', 'RPAREN', 'EOF'
-
-BEGIN, END, DOT, ID, ASSIGN, SEMI = 'BEGIN', 'END', 'DOT', 'ID', 'ASSIGN', 'SEMI'
+INTEGER_CONST = 'INTEGER_CONST'
+REAL_CONST = 'REAL_CONST'
+PLUS = 'PLUS'
+MINUS = 'MINUS'
+MUL = 'MUL'
+INTEGER_DIV = 'INTEGER_DIV'     # //
+FLOAT_DIV = 'FLOAT_DIV'         # /
+LPAREN = 'LPAREN'       # (
+RPAREN = 'RPAREN'       # )
+EOF = 'EOF'
+DOT = 'DOT'             # .
+ID = 'ID'
+ASSIGN = 'ASSIGN'       # :=
+SEMI = 'SEMI'           # ;
+COLON = 'COLON'         # :
+COMMA = 'COMMA'         # ,
 
 
 class Token(object):
@@ -33,8 +46,12 @@ class Token(object):
 
 # reserved keywords
 RESERVED_KEYWORDS = {
-    'BEGIN': Token(BEGIN, 'BEGIN'),
-    'END': Token(END, 'END'),
+    'PROGRAM': Token('PROGRAM', 'PROGRAM'),
+    'VAR': Token('VAR', 'VAR'),
+    'INTEGER': Token('INTEGER', 'INTEGER'),
+    'REAL': Token('REAL', 'REAL'),
+    'BEGIN': Token('BEGIN', 'BEGIN'),
+    'END': Token('END', 'END'),
 }
 
 
@@ -54,6 +71,11 @@ class Tokenizer(object):
     def error(self):
         raise Exception('Invalid character')
 
+    def skip_comment(self):
+        while self.current_char is not '}':
+            self.advance()
+        self.advance()
+
     def peek(self) -> str:
         """peek return the next character but don't change the pos."""
         peek_pos = self.pos + 1
@@ -69,7 +91,7 @@ class Tokenizer(object):
             result += self.current_char
             self.advance()
 
-        return RESERVED_KEYWORDS.get(result, Token(ID, result))
+        return RESERVED_KEYWORDS.get(result.upper(), Token(ID, result))
 
     def advance(self):
         """Advance the `pos` pointer and set the `current_char` variable."""
@@ -84,13 +106,22 @@ class Tokenizer(object):
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
-    def integer(self) -> int:
-        """Return a (multidigit) integer consumed from the input."""
+    def number(self):
+        """Return a (multidigit) integer or float consumed from the input."""
         result = ''
         while self.current_char is not None and self.current_char.isdigit():
             result += self.current_char
             self.advance()
-        return int(result)
+
+        if self.current_char is '.':
+            # combine float value
+            self.advance()
+            while self.current_char is not None and self.current_char.isdigit():
+                result += self.current_char
+                self.advance()
+            return Token(REAL_CONST, float(result))
+        else:
+            return Token(INTEGER_CONST, int(result))
 
     def get_next_token(self) -> Token:
         """Lexical analyzer (also known as scanner or tokenizer)
@@ -99,13 +130,17 @@ class Tokenizer(object):
         apart into tokens. One token at a time.
         """
         while self.current_char is not None:
+            if self.current_char is '{':
+                self.advance()
+                self.skip_comment()
+                continue
 
             if self.current_char.isspace():
                 self.skip_whitespace()
                 continue
 
             if self.current_char.isdigit():
-                return Token(INTEGER, self.integer())
+                return self.number()
 
             if self.current_char is '+':
                 self.advance()
@@ -119,9 +154,14 @@ class Tokenizer(object):
                 self.advance()
                 return Token(MUL, '*')
 
-            if self.current_char is "/":
+            if self.current_char is '/' and self.peek() is not '/':
                 self.advance()
-                return Token(DIV, '/')
+                return Token(FLOAT_DIV, '/')
+
+            if self.current_char is '/' and self.peek() is '/':
+                self.advance()
+                self.advance()
+                return Token(INTEGER_DIV, '//')
 
             if self.current_char is '(':
                 self.advance()
@@ -131,8 +171,12 @@ class Tokenizer(object):
                 self.advance()
                 return Token(RPAREN, ')')
 
-            if self.current_char.isalpha():
+            if self.current_char.isalpha() or self.current_char is '_':
                 return self.identify()
+
+            if self.current_char is ':' and self.peek() is not '=':
+                self.advance()
+                return Token(COLON, ':')
 
             if self.current_char is ':' and self.peek() is '=':
                 self.advance()
@@ -142,6 +186,10 @@ class Tokenizer(object):
             if self.current_char is ';':
                 self.advance()
                 return Token(SEMI, ';')
+
+            if self.current_char is ',':
+                self.advance()
+                return Token(COMMA, ',')
 
             if self.current_char is '.':
                 self.advance()
@@ -256,9 +304,9 @@ class Parser(object):
 
     def compound_statements(self) -> AST:
         """compound_statement: BEGIN statement_list END"""
-        self.eat(BEGIN)
+        self.eat('BEGIN')
         nodes = self.statement_list()
-        self.eat(END)
+        self.eat('END')
         root = Compound()
         for node in nodes:
             root.childrens.append(node)
@@ -283,7 +331,7 @@ class Parser(object):
                   | assignment_statement
                   | empty
         """
-        if self.current_token.type is BEGIN:
+        if self.current_token.type is 'BEGIN':
             node = self.compound_statements()
         elif self.current_token.type is ID:
             node = self.assignment_statement()
@@ -328,8 +376,8 @@ class Parser(object):
         elif token.type is MINUS:
             self.eat(MINUS)
             return UnaryOp(op=token, factor=self.factor())
-        elif token.type is INTEGER:
-            self.eat(INTEGER)
+        elif token.type is INTEGER_CONST:
+            self.eat(INTEGER_CONST)
             return Num(token=token)
         elif token.type is LPAREN:
             self.eat(LPAREN)
@@ -345,13 +393,14 @@ class Parser(object):
         """term : factor ((MUL | DIV) factor)*"""
         node = self.factor()
 
-        while self.current_token.type in (MUL, DIV):
+        while self.current_token.type in (MUL, INTEGER_DIV, FLOAT_DIV):
             token = self.current_token
             if token.type == MUL:
                 self.eat(MUL)
+            elif token.type == INTEGER_DIV:
+                self.eat(INTEGER_DIV)
             else:
-                self.eat(DIV)
-
+                self.eat(FLOAT_DIV)
             node = BinOp(left=node, op=token, right=self.factor())
 
         return node
@@ -440,8 +489,10 @@ class Interpreter(Visitor):
             return self.visit(node.left) - self.visit(node.right)
         elif node.op.type is MUL:
             return self.visit(node.left) * self.visit(node.right)
-        elif node.op.type is DIV:
+        elif node.op.type is INTEGER_DIV:
             return self.visit(node.left) // self.visit(node.right)
+        elif node.op.type is FLOAT_DIV:
+            return self.visit(node.left) / self.visit(node.right)
 
     def visit_num(self, node: Num):
         return node.token.value
