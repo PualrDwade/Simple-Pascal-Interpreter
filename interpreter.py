@@ -494,6 +494,14 @@ class Visitor(object):
             return self.visit_assign(node)
         elif isinstance(node, NoOp):
             return self.visit_noop(node)
+        elif isinstance(node, Program):
+            return self.visit_program(node)
+        elif isinstance(node, Block):
+            return self.visit_block(node)
+        elif isinstance(node, VarDecl):
+            return self.visit_vardecl(node)
+        elif isinstance(node, Type):
+            return self.visit_type(node)
         else:
             raise Exception("Invalid AST node")
 
@@ -516,6 +524,18 @@ class Visitor(object):
         pass
 
     def visit_noop(self, node: NoOp):
+        pass
+
+    def visit_program(self, node: Program):
+        pass
+
+    def visit_block(self, node: Block):
+        pass
+
+    def visit_vardecl(self, node: VarDecl):
+        pass
+
+    def visit_type(self, node: Type):
         pass
 
 
@@ -564,6 +584,20 @@ class Interpreter(Visitor):
         self.GLOBAL_SCOPE[var_name] = self.visit(node.right)
 
     def visit_noop(self, node: NoOp):
+        pass
+
+    def visit_program(self, node):
+        self.visit(node.block)
+
+    def visit_block(self, node):
+        for declaration in node.declarations:
+            self.visit(declaration)
+        self.visit(node.compound_statement)
+
+    def visit_vardecl(self, node):
+        pass
+
+    def visit_type(self, node):
         pass
 
     def interpret(self) -> int:
