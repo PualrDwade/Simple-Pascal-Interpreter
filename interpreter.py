@@ -1,22 +1,28 @@
 import sys
 
 # Tokens for Tokenizer analysis result
+INTEGER = 'INTEGER'
+REAL = 'REAL'
 INTEGER_CONST = 'INTEGER_CONST'
 REAL_CONST = 'REAL_CONST'
 PLUS = 'PLUS'
 MINUS = 'MINUS'
 MUL = 'MUL'
-INTEGER_DIV = 'INTEGER_DIV'     # //
-FLOAT_DIV = 'FLOAT_DIV'         # /
-LPAREN = 'LPAREN'       # (
-RPAREN = 'RPAREN'       # )
-EOF = 'EOF'
-DOT = 'DOT'             # .
+INTEGER_DIV = 'INTEGER_DIV'
+FLOAT_DIV = 'FLOAT_DIV'
+LPAREN = 'LPAREN'
+RPAREN = 'RPAREN'
 ID = 'ID'
-ASSIGN = 'ASSIGN'       # :=
-SEMI = 'SEMI'           # ;
-COLON = 'COLON'         # :
-COMMA = 'COMMA'         # ,
+ASSIGN = 'ASSIGN'
+BEGIN = 'BEGIN'
+END = 'END'
+SEMI = 'SEMI'
+DOT = 'DOT'
+PROGRAM = 'PROGRAM'
+VAR = 'VAR'
+COLON = 'COLON'
+COMMA = 'COMMA'
+EOF = 'EOF'
 
 
 class Token(object):
@@ -24,7 +30,7 @@ class Token(object):
     Token is base unit for gamma
     '''
 
-    def __init__(self, type, value):
+    def __init__(self, type: str, value: str):
         self.type = type
         self.value = value
 
@@ -46,12 +52,12 @@ class Token(object):
 
 # reserved keywords
 RESERVED_KEYWORDS = {
-    'PROGRAM': Token('PROGRAM', 'PROGRAM'),
-    'VAR': Token('VAR', 'VAR'),
-    'INTEGER': Token('INTEGER', 'INTEGER'),
-    'REAL': Token('REAL', 'REAL'),
-    'BEGIN': Token('BEGIN', 'BEGIN'),
-    'END': Token('END', 'END'),
+    'PROGRAM': Token(PROGRAM, 'PROGRAM'),
+    'VAR': Token(VAR, 'VAR'),
+    'INTEGER': Token(INTEGER, 'INTEGER'),
+    'REAL': Token(REAL, 'REAL'),
+    'BEGIN': Token(BEGIN, 'BEGIN'),
+    'END': Token(END, 'END'),
 }
 
 
@@ -289,7 +295,7 @@ class Parser(object):
 
     def program(self) -> Program:
         """program : PROGRAM variable SEMI block DOT"""
-        self.eat('PROGRAM')
+        self.eat(PROGRAM)
         var_node = self.variable()
         programe_name = var_node.value  # value hold the variable's name
         self.eat(SEMI)
@@ -309,8 +315,8 @@ class Parser(object):
         """
         declarations = []
 
-        if self.current_token.type is 'VAR':
-            self.eat('VAR')
+        if self.current_token.type is VAR:
+            self.eat(VAR)
             while self.current_token.type is ID:
                 declarations.extend(self.variable_declaration())
                 self.eat(SEMI)
@@ -338,17 +344,17 @@ class Parser(object):
                      | REAL
         """
         token = self.current_token
-        if token.type is 'INTEGER':
-            self.eat('INTEGER')
+        if token.type is INTEGER:
+            self.eat(INTEGER)
         else:
-            self.eat('REAL')
+            self.eat(REAL)
         return Type(token)
 
     def compound_statement(self) -> Compound:
         """compound_statement: BEGIN statement_list END"""
-        self.eat('BEGIN')
+        self.eat(BEGIN)
         nodes = self.statement_list()
-        self.eat('END')
+        self.eat(END)
         root = Compound()
         for node in nodes:
             root.childrens.append(node)
@@ -373,7 +379,7 @@ class Parser(object):
                   | assignment_statement
                   | empty
         """
-        if self.current_token.type is 'BEGIN':
+        if self.current_token.type is BEGIN:
             node = self.compound_statement()
         elif self.current_token.type is ID:
             node = self.assignment_statement()
