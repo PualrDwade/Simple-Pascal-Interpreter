@@ -2,7 +2,8 @@ from visitor import Visitor
 from parser import Parser
 from tokenizer import Token
 from tokens import PLUS, MINUS, MUL, INTEGER_DIV, FLOAT_DIV
-from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type
+from symbol_table_builder import SymbolTableBuilder
 
 
 class Interpreter(Visitor):
@@ -52,20 +53,22 @@ class Interpreter(Visitor):
     def visit_noop(self, node: NoOp):
         pass
 
-    def visit_program(self, node):
+    def visit_program(self, node: Program):
         self.visit(node.block)
 
-    def visit_block(self, node):
+    def visit_block(self, node: Block):
         for declaration in node.declarations:
             self.visit(declaration)
         self.visit(node.compound_statement)
 
-    def visit_vardecl(self, node):
+    def visit_vardecl(self, node: VarDecl):
         pass
 
-    def visit_type(self, node):
+    def visit_type(self, node: Type):
         pass
 
     def interpret(self) -> int:
         ast = self.parser.parse()
-        return self.visit(ast)
+        builder = SymbolTableBuilder()
+        builder.visit(ast)
+        self.visit(ast)

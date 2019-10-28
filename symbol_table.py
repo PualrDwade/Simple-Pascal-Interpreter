@@ -39,6 +39,7 @@ class VarSymbol(Symbol):
 class SymbolTable(object):
     def __init__(self):
         self.__symbols = {}
+        self.__init_buildins()
 
     def __init_buildins(self):
         # initialize the built-in types when the symbol table instance is created.
