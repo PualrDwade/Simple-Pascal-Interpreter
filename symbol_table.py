@@ -34,3 +34,30 @@ class VarSymbol(Symbol):
         return '<{name}:{type}>'.format(name=self.name, type=self.type)
 
     __repr__ = __str__
+
+
+class SymbolTable(object):
+    def __init__(self):
+        self.__symbols = {}
+
+    def __init_buildins(self):
+        # initialize the built-in types when the symbol table instance is created.
+        self.define(BuildinTypeSymbol('INTEGER'))
+        self.define(BuildinTypeSymbol('REAL'))
+
+    def __str__(self):
+        return 'Symbols: {symbols}'.format(
+            symbols=[value for value in self.__symbols.values()]
+        )
+
+    __repr = __str__
+
+    def define(self, symbol: Symbol):
+        print('Define: %s' % symbol)
+        self.__symbols[symbol.name] = symbol
+
+    def lookup(self, name) -> Symbol:
+        print('Lookup: %s' % name)
+        symbol = self.__symbols.get(name)
+        # 'symbol' is either an instance of the Symbol class or 'None'
+        return symbol
