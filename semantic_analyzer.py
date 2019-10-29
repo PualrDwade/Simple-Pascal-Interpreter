@@ -3,9 +3,9 @@ from symbol_table import SymbolTable, VarSymbol
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type
 
 
-class SymbolTableBuilder(Visitor):
+class SemanticAnalyzer(Visitor):
     '''
-    SymbolTableBuilder inherit from Visitor and it's work is
+    SemanticAnalyzer inherit from Visitor and it's work is
     build program's symbol table by given AST parsed by Parser
     '''
 
@@ -24,32 +24,37 @@ class SymbolTableBuilder(Visitor):
         for child in node.childrens:
             self.visit(child)
 
-    def visit_binop(self, node: BinOp):
+    def visit_binop(self, node):
         self.visit(node.left)
         self.visit(node.right)
-
-    def visit_unaryop(self, node: UnaryOp):
-        self.visit(node.factor)
 
     def visit_vardecl(self, node: VarDecl):
         type_name = node.type_node.type
         type_symbol = self.__symbol_table.lookup(type_name)
+
+        # We have all the information we need to create a variable symbol.
+        # Create the symbol and insert it into the symbol table.
         var_name = node.var_node.value
+        # duplicate define check
+        if self.__symbol_table.lookup(var_name) is not None:
+            raise Exception(
+                "Error: Duplicate identifier '%s' found" % var_name
+            )
+
         var_symbol = VarSymbol(var_name, type_symbol)
-        # define variable's symbol
         self.__symbol_table.define(var_symbol)
 
     def visit_assign(self, node: Assign):
-        # judge if variable is not declared
-        var_name = node.left.value
-        var_symbol = self.__symbol_table.lookup(var_name)
-        if var_symbol is None:
-            raise NameError(repr(var_name))
+        # right-hand side
         self.visit(node.right)
+        # left-hand side
+        self.visit(node.left)
 
     def visit_var(self, node: Var):
         # judge if variable is not declared
         var_name = node.value
         var_symbol = self.__symbol_table.lookup(var_name)
         if var_symbol is None:
-            raise NameError(repr(var_name))
+            raise Exception(
+                "Error: Symbol(identifier) not found '%s'" % var_name
+            )

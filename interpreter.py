@@ -3,7 +3,7 @@ from parser import Parser
 from tokenizer import Token
 from tokens import PLUS, MINUS, MUL, INTEGER_DIV, FLOAT_DIV
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
-from symbol_table_builder import SymbolTableBuilder
+from semantic_analyzer import SemanticAnalyzer
 
 
 class Interpreter(Visitor):
@@ -13,7 +13,7 @@ class Interpreter(Visitor):
 
     def __init__(self, parser: Parser):
         self.parser = parser
-        self.GLOBAL_SCOPE = {}
+        self.GLOBAL_MEMORY = {}
 
     def visit_binop(self, node: BinOp):
         if node.op.type is PLUS:
@@ -41,14 +41,14 @@ class Interpreter(Visitor):
             self.visit(child)
 
     def visit_var(self, node: Var):
-        val = self.GLOBAL_SCOPE[node.value]  # get value by variable's name
+        val = self.GLOBAL_MEMORY[node.value]  # get value by variable's name
         if val is not None:
             return val
         raise NameError(repr(node.value))
 
     def visit_assign(self, node: Assign):
         var_name = node.left.value  # get variable's name
-        self.GLOBAL_SCOPE[var_name] = self.visit(node.right)
+        self.GLOBAL_MEMORY[var_name] = self.visit(node.right)
 
     def visit_noop(self, node: NoOp):
         pass
@@ -72,6 +72,6 @@ class Interpreter(Visitor):
 
     def interpret(self) -> int:
         ast = self.parser.parse()
-        builder = SymbolTableBuilder()
+        builder = SemanticAnalyzer()
         builder.visit(ast)
         self.visit(ast)

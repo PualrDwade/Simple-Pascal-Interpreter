@@ -47,9 +47,15 @@ class SymbolTable(object):
         self.define(BuildinTypeSymbol('REAL'))
 
     def __str__(self):
-        return 'Symbols: {symbols}'.format(
-            symbols=[value for value in self.__symbols.values()]
+        table_header = 'Symbol table contents'
+        lines = ['\n', table_header, '_' * len(table_header)]
+        lines.extend(
+            ('%7s: %r' % (key, value))
+            for key, value in self.__symbols.items()
         )
+        lines.append('\n')
+        s = '\n'.join(lines)
+        return s
 
     __repr = __str__
 
