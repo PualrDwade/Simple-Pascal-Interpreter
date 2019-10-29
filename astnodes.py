@@ -68,3 +68,9 @@ class Program(AST):
 
 class NoOp(AST):
     pass
+
+
+class ProcedureDecl(AST):
+    def __init__(self, proc_name: str, block: Block):
+        self.proc_name = proc_name
+        self.block = block

@@ -37,9 +37,10 @@ class Parser(object):
         compound_statement = self.compound_statement()
         return Block(declarations, compound_statement)
 
-    def declarations(self) -> [VarDecl]:
+    def declarations(self) -> [AST]:
         """declarations : VAR (variable_declaration SEMI)+
-                    | empty
+                        | (PROCEDURE ID SEMI block SEMI)*
+                        | empty
         """
         declarations = []
 
@@ -48,6 +49,16 @@ class Parser(object):
             while self.current_token.type is ID:
                 declarations.extend(self.variable_declaration())
                 self.eat(SEMI)
+
+        while self.current_token.type is PROCEDURE:
+            self.eat(PROCEDURE)
+            proc_name = self.current_token.value
+            self.eat(ID)
+            self.eat(SEMI)
+            block = self.block()
+            proc_decl = ProcedureDecl(proc_name, block)
+            declarations.append(proc_decl)
+            self.eat(SEMI)
 
         return declarations
 

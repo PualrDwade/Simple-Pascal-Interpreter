@@ -2,7 +2,7 @@ from visitor import Visitor
 from parser import Parser
 from tokenizer import Token
 from tokens import PLUS, MINUS, MUL, INTEGER_DIV, FLOAT_DIV
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
 from symbol_table_builder import SymbolTableBuilder
 
 
@@ -13,7 +13,7 @@ class Interpreter(Visitor):
 
     def __init__(self, parser: Parser):
         self.parser = parser
-        self.GLOBAL_SCOPE = {}  # symbol table
+        self.GLOBAL_SCOPE = {}
 
     def visit_binop(self, node: BinOp):
         if node.op.type is PLUS:
@@ -66,6 +66,9 @@ class Interpreter(Visitor):
 
     def visit_type(self, node: Type):
         pass
+
+    def visit_procdecl(self, node: ProcedureDecl):
+        self.visit_block(node.block)
 
     def interpret(self) -> int:
         ast = self.parser.parse()
