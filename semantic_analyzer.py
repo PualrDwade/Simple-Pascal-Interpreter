@@ -1,5 +1,5 @@
 from visitor import Visitor
-from symbol_table import SymbolTable, VarSymbol
+from symbol_table import ScopedSymbolTable, VarSymbol
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type
 
 
@@ -10,7 +10,10 @@ class SemanticAnalyzer(Visitor):
     '''
 
     def __init__(self):
-        self.__symbol_table = SymbolTable()
+        self.__scope = ScopedSymbolTable(scope_name='global', scope_level=1)
+
+    def scope(self) -> ScopedSymbolTable:
+        return self.__scope
 
     def visit_program(self, node: Program):
         self.visit(node.block)
@@ -29,20 +32,20 @@ class SemanticAnalyzer(Visitor):
         self.visit(node.right)
 
     def visit_vardecl(self, node: VarDecl):
-        type_name = node.type_node.type
-        type_symbol = self.__symbol_table.lookup(type_name)
+        type_name = node.type.type
+        type_symbol = self.__scope.lookup(type_name)
 
         # We have all the information we need to create a variable symbol.
         # Create the symbol and insert it into the symbol table.
-        var_name = node.var_node.value
+        var_name = node.var.value
         # duplicate define check
-        if self.__symbol_table.lookup(var_name) is not None:
+        if self.__scope.lookup(var_name) is not None:
             raise Exception(
                 "Error: Duplicate identifier '%s' found" % var_name
             )
 
         var_symbol = VarSymbol(var_name, type_symbol)
-        self.__symbol_table.define(var_symbol)
+        self.__scope.define(var_symbol)
 
     def visit_assign(self, node: Assign):
         # right-hand side
@@ -53,7 +56,7 @@ class SemanticAnalyzer(Visitor):
     def visit_var(self, node: Var):
         # judge if variable is not declared
         var_name = node.value
-        var_symbol = self.__symbol_table.lookup(var_name)
+        var_symbol = self.__scope.lookup(var_name)
         if var_symbol is None:
             raise Exception(
                 "Error: Symbol(identifier) not found '%s'" % var_name

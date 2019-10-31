@@ -49,9 +49,9 @@ class Type(AST):
 
 
 class VarDecl(AST):
-    def __init__(self, var_node: Var, type_node: Type):
-        self.var_node = var_node
-        self.type_node = type_node
+    def __init__(self, var: Var, type: Type):
+        self.var = var
+        self.type = type
 
 
 class Block(AST):
@@ -70,7 +70,14 @@ class NoOp(AST):
     pass
 
 
+class Param(AST):
+    def __init__(self, var: Var, type: Type):
+        self.var = var
+        self.type = type
+
+
 class ProcedureDecl(AST):
-    def __init__(self, proc_name: str, block: Block):
+    def __init__(self, proc_name: str, params: [Param], block: Block):
         self.proc_name = proc_name
         self.block = block
+        self.params = params

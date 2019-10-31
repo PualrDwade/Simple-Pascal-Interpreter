@@ -36,9 +36,11 @@ class VarSymbol(Symbol):
     __repr__ = __str__
 
 
-class SymbolTable(object):
-    def __init__(self):
+class ScopedSymbolTable(object):
+    def __init__(self, scope_name: str, scope_level: int):
         self.__symbols = {}
+        self.scope_name = scope_name
+        self.scope_level = scope_level
         self.__init_buildins()
 
     def __init_buildins(self):
@@ -47,8 +49,15 @@ class SymbolTable(object):
         self.define(BuildinTypeSymbol('REAL'))
 
     def __str__(self):
-        table_header = 'Symbol table contents'
-        lines = ['\n', table_header, '_' * len(table_header)]
+        h1 = 'SCOPE (SCOPED SYMBOL TABLE)'
+        lines = ['\n', h1, '=' * len(h1)]
+        for header_name, header_value in (
+            ('Scope name', self.scope_name),
+            ('Scope level', self.scope_level),
+        ):
+            lines.append('%-15s: %s' % (header_name, header_value))
+        h2 = 'Scope (Scoped symbol table) contents'
+        lines.extend([h2, '-' * len(h2)])
         lines.extend(
             ('%7s: %r' % (key, value))
             for key, value in self.__symbols.items()

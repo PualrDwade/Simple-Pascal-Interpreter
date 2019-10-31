@@ -72,6 +72,7 @@ class Interpreter(Visitor):
 
     def interpret(self) -> int:
         ast = self.parser.parse()
-        builder = SemanticAnalyzer()
-        builder.visit(ast)
+        analyzer = SemanticAnalyzer()
+        analyzer.visit(ast)
+        print(analyzer.scope())
         self.visit(ast)
