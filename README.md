@@ -2,7 +2,7 @@
 
 ## introduce
 
-Simple Pascal Interpreter is a simple interpreter to interpret pascal programe
+Simple Pascal Interpreter is a simple interpreter to interpret pascal program
 
 all feature include:
 
