@@ -42,7 +42,7 @@ class ProcedureSymbol(Symbol):
 class VarSymbol(Symbol):
     """VarSymbol has name and type"""
 
-    def __init__(self, name: str, type):
+    def __init__(self, name: str, type: Symbol):
         super().__init__(name, type)
 
     def __str__(self):
