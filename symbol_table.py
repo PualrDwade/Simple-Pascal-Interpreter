@@ -24,6 +24,21 @@ class BuildinTypeSymbol(Symbol):
     __repr__ = __str__
 
 
+class ProcedureSymbol(Symbol):
+    """ProcedureSymbol is symbol of procedure declaration"""
+
+    def __init__(self, name, params=None):
+        super().__init__(name)
+        self.params = params if params is not None else []
+
+    def __str__(self):
+        return '<{class_name}(name={name}, parameters={params})>'.format(
+            class_name=self.__class__.__name__,
+            name=self.name,
+            params=self.params,
+        )
+
+
 class VarSymbol(Symbol):
     """VarSymbol has name and type"""
 
