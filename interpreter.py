@@ -74,5 +74,4 @@ class Interpreter(Visitor):
         ast = self.parser.parse()
         analyzer = SemanticAnalyzer()
         analyzer.visit(ast)
-        print(analyzer.scope())
         self.visit(ast)

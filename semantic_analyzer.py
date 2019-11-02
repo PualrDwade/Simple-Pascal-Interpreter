@@ -71,6 +71,7 @@ class SemanticAnalyzer(Visitor):
     def visit_procdecl(self, node: ProcedureDecl):
         proc_name = node.proc_name
         proc_symbol = ProcedureSymbol(proc_name)
+        self.current_scope.define(proc_symbol)
         # then we shoud enter new scope
         print('enter scope: %s' % proc_name)
         # new scope include var declaration and formal params

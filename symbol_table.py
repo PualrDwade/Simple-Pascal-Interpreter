@@ -11,17 +11,20 @@ class Symbol(object):
         self.name = name
         self.type = type
 
+    def __str__(self):
+        return "<{class_name}(name = '{name}')>".format(
+            class_name=self.__class__.__name__,
+            name=self.name,
+        )
+
+    __repr__ = __str__
+
 
 class BuildinTypeSymbol(Symbol):
     """BuildinTypeSymbol is buidin symbol which category is BuildinTypeSymbol"""
 
     def __init__(self, name: str):
         super().__init__(name)
-
-    def __str__(self):
-        return self.name
-
-    __repr__ = __str__
 
 
 class ProcedureSymbol(Symbol):
@@ -31,24 +34,12 @@ class ProcedureSymbol(Symbol):
         super().__init__(name)
         self.params = params if params is not None else []
 
-    def __str__(self):
-        return '<{class_name}(name={name}, parameters={params})>'.format(
-            class_name=self.__class__.__name__,
-            name=self.name,
-            params=self.params,
-        )
-
 
 class VarSymbol(Symbol):
     """VarSymbol has name and type"""
 
     def __init__(self, name: str, type: Symbol):
         super().__init__(name, type)
-
-    def __str__(self):
-        return '<{name}:{type}>'.format(name=self.name, type=self.type)
-
-    __repr__ = __str__
 
 
 class ScopedSymbolTable(object):
