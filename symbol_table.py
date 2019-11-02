@@ -90,7 +90,7 @@ class ScopedSymbolTable(object):
         self.__symbols[symbol.name] = symbol
 
     def lookup(self, name, current_scope_only=False) -> Symbol:
-        print('Lookup: %s' % name)
+        print('Lookup: %s. (Scope name: %s)' % (name, self.scope_name))
         symbol = self.__symbols.get(name)
         if symbol is not None:
             return symbol
