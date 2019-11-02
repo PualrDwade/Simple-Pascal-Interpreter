@@ -17,12 +17,16 @@ class SemanticAnalyzer(Visitor):
 
     def visit_program(self, node: Program):
         # add global scoped symbol table
-        print('enter scope: global')
-        global_scope = ScopedSymbolTable(scope_name='global', scope_level=1)
+        global_scope = ScopedSymbolTable(
+            scope_name='global',
+            scope_level=1,
+            enclosing_scope=self.current_scope)
         self.current_scope = global_scope
+        print('enter scope: %s' % self.current_scope.scope_name)
         self.visit(node.block)
         print(global_scope)
-        print('leave scope: global')
+        print('leave scope: %s' % self.current_scope.scope_name)
+        self.current_scope = self.current_scope.enclosing_scope
 
     def visit_block(self, node: Block):
         for declaration in node.declarations:
@@ -45,7 +49,7 @@ class SemanticAnalyzer(Visitor):
         # Create the symbol and insert it into the symbol table.
         var_name = node.var.value
         # duplicate define check
-        if self.current_scope.lookup(var_name) is not None:
+        if self.current_scope.lookup(var_name, current_scope_only=True) is not None:
             raise Exception(
                 "Error: Duplicate identifier '%s' found" % var_name
             )
@@ -71,13 +75,21 @@ class SemanticAnalyzer(Visitor):
     def visit_procdecl(self, node: ProcedureDecl):
         proc_name = node.proc_name
         proc_symbol = ProcedureSymbol(proc_name)
+        if self.current_scope.lookup(proc_name, current_scope_only=True) is not None:
+            raise Exception(
+                "Error: Duplicate procedure '%s' found" % proc_name
+            )
         self.current_scope.define(proc_symbol)
-        # then we shoud enter new scope
-        print('enter scope: %s' % proc_name)
+
         # new scope include var declaration and formal params
         procedure_scope = ScopedSymbolTable(
-            scope_name=proc_name, scope_level=2)
+            scope_name=proc_name,
+            scope_level=self.current_scope.scope_level + 1,
+            enclosing_scope=self.current_scope)
         self.current_scope = procedure_scope
+
+        # then we shoud enter new scope
+        print('enter scope: %s' % self.current_scope.scope_name)
         # intert params into the procedure scope
         for param in node.params:
             param_name = param.var.value
@@ -90,4 +102,5 @@ class SemanticAnalyzer(Visitor):
 
         self.visit(node.block)
         print(procedure_scope)
-        print('leave scope: %s' % proc_name)
+        print('leave scope: %s' % self.current_scope.scope_name)
+        self.current_scope = self.current_scope.enclosing_scope

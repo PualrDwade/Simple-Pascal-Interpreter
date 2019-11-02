@@ -43,10 +43,11 @@ class VarSymbol(Symbol):
 
 
 class ScopedSymbolTable(object):
-    def __init__(self, scope_name: str, scope_level: int):
+    def __init__(self, scope_name: str, scope_level: int, enclosing_scope=None):
         self.__symbols = {}
         self.scope_name = scope_name
         self.scope_level = scope_level
+        self.enclosing_scope = enclosing_scope
         self.__init_buildins()
 
     def __init_buildins(self):
@@ -60,6 +61,9 @@ class ScopedSymbolTable(object):
         for header_name, header_value in (
             ('Scope name', self.scope_name),
             ('Scope level', self.scope_level),
+            ('Enclosing scope',
+             self.enclosing_scope.scope_name if self.enclosing_scope else None
+             )
         ):
             lines.append('%-15s: %s' % (header_name, header_value))
         h2 = 'Scope (Scoped symbol table) contents'
@@ -78,8 +82,16 @@ class ScopedSymbolTable(object):
         print('Define: %s' % symbol)
         self.__symbols[symbol.name] = symbol
 
-    def lookup(self, name) -> Symbol:
+    def lookup(self, name, current_scope_only=False) -> Symbol:
         print('Lookup: %s' % name)
         symbol = self.__symbols.get(name)
-        # 'symbol' is either an instance of the Symbol class or 'None'
-        return symbol
+        if symbol is not None:
+            return symbol
+
+        if current_scope_only:
+            return None
+
+        if self.enclosing_scope is not None:
+            return self.enclosing_scope.lookup(name)
+
+        return None

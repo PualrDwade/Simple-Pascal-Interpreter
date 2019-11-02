@@ -4,7 +4,7 @@ program Main;
    procedure Alpha(a : integer);
       var y : integer;
    begin
-
+      y := a + x;
    end;
 
 begin { Main }
