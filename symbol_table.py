@@ -48,6 +48,15 @@ class VarSymbol(Symbol):
     def __init__(self, name: str, type: Symbol):
         super().__init__(name, type)
 
+    def __str__(self):
+        return "<{class_name}({name}:{type})>".format(
+            class_name=self.__class__.__name__,
+            name=self.name,
+            type=self.type.name
+        )
+
+    __repr__ = __str__
+
 
 class ScopedSymbolTable(object):
     def __init__(self, scope_name: str, scope_level: int, enclosing_scope=None):
@@ -55,12 +64,6 @@ class ScopedSymbolTable(object):
         self.scope_name = scope_name
         self.scope_level = scope_level
         self.enclosing_scope = enclosing_scope
-        self.__init_buildins()
-
-    def __init_buildins(self):
-        # initialize the built-in types when the symbol table instance is created.
-        self.define(BuildinTypeSymbol('INTEGER'))
-        self.define(BuildinTypeSymbol('REAL'))
 
     def __str__(self):
         h1 = 'SCOPE (SCOPED SYMBOL TABLE)'

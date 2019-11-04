@@ -1,5 +1,5 @@
 from visitor import Visitor
-from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol
+from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
 
 
@@ -10,7 +10,18 @@ class SemanticAnalyzer(Visitor):
     '''
 
     def __init__(self):
-        self.current_scope = None
+        self.buildin_scope = ScopedSymbolTable(
+            scope_name='buildin',
+            scope_level=0,
+        )
+        self.__init_buildins()
+        self.current_scope = self.buildin_scope
+
+    def __init_buildins(self):
+        print('init buildin scope\'s symbols')
+        # initialize the built-in types when the symbol table instance is created.
+        self.buildin_scope.define(BuildinTypeSymbol('INTEGER'))
+        self.buildin_scope.define(BuildinTypeSymbol('REAL'))
 
     def scope(self) -> ScopedSymbolTable:
         return self.current_scope
@@ -19,7 +30,7 @@ class SemanticAnalyzer(Visitor):
         # add global scoped symbol table
         global_scope = ScopedSymbolTable(
             scope_name='global',
-            scope_level=1,
+            scope_level=self.current_scope.scope_level + 1,
             enclosing_scope=self.current_scope)
         self.current_scope = global_scope
         print('enter scope: %s' % self.current_scope.scope_name)
