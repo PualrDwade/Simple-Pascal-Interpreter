@@ -56,6 +56,8 @@ class Tokenizer(object):
 
     def skip_comment(self):
         while self.current_char is not '}':
+            if self.pos == len(self.text)-1:
+                raise Exception('Unclosed comment')
             self.advance()
         self.advance()
 
