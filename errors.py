@@ -10,6 +10,7 @@ class ErrorCode(Enum):
 
 class Error(Exception):
     def __init__(self, error_code=None, token=None, message=None):
+        super().__init__(message)
         self.error_code = error_code
         self.token = token
         # add exception class name before the message
