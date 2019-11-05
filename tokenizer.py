@@ -3,7 +3,7 @@ from errors import LexerError
 
 
 class Token(object):
-    def __init__(self, type, value, lineno=None, column=None):
+    def __init__(self, type: TokenType, value, lineno=None, column=None):
         self.type = type
         self.value = value
         self.lineno = lineno

@@ -5,6 +5,7 @@ class ErrorCode(Enum):
     UNEXPECTED_TOKEN = 'Unexpected token'
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
+    DUPLICATE_PROC_DECL = 'Duplicate procedure found'
 
 
 class Error(Exception):

@@ -1,4 +1,5 @@
 from visitor import Visitor
+from errors import SemanticError, ErrorCode
 from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
 
@@ -22,6 +23,13 @@ class SemanticAnalyzer(Visitor):
         # initialize the built-in types when the symbol table instance is created.
         self.buildin_scope.define(BuildinTypeSymbol('INTEGER'))
         self.buildin_scope.define(BuildinTypeSymbol('REAL'))
+
+    def error(self, error_code, token):
+        raise SemanticError(
+            error_code=error_code,
+            token=token,
+            message=f'{error_code.value} -> {token}',
+        )
 
     def scope(self) -> ScopedSymbolTable:
         return self.current_scope
@@ -61,8 +69,9 @@ class SemanticAnalyzer(Visitor):
         var_name = node.var.value
         # duplicate define check
         if self.current_scope.lookup(var_name, current_scope_only=True) is not None:
-            raise Exception(
-                "Error: Duplicate identifier '%s' found" % var_name
+            self.error(
+                error_code=ErrorCode.DUPLICATE_ID,
+                token=node.var.token,
             )
 
         var_symbol = VarSymbol(var_name, type_symbol)
@@ -79,17 +88,20 @@ class SemanticAnalyzer(Visitor):
         var_name = node.value
         var_symbol = self.current_scope.lookup(var_name)
         if var_symbol is None:
-            raise Exception(
-                "Error: Symbol(identifier) not found '%s'" % var_name
+            self.error(
+                error_code=ErrorCode.ID_NOT_FOUND,
+                token=node.token
             )
 
     def visit_procdecl(self, node: ProcedureDecl):
         proc_name = node.proc_name
         proc_symbol = ProcedureSymbol(proc_name)
         if self.current_scope.lookup(proc_name, current_scope_only=True) is not None:
-            raise Exception(
-                "Error: Duplicate procedure '%s' found" % proc_name
+            self.error(
+                error_code=ErrorCode.DUPLICATE_PROC_DECL,
+                token=proc_name
             )
+
         self.current_scope.define(proc_symbol)
 
         # new scope include var declaration and formal params

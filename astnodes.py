@@ -77,7 +77,7 @@ class Param(AST):
 
 
 class ProcedureDecl(AST):
-    def __init__(self, proc_name: str, params: [Param], block: Block):
+    def __init__(self, proc_name: Token, params: [Param], block: Block):
         self.proc_name = proc_name
         self.block = block
         self.params = params
