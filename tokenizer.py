@@ -1,41 +1,30 @@
-from tokens import *
+from tokens import TokenType, RESERVED_KEYWORDS
+from errors import LexerError
 
 
 class Token(object):
-    '''
-    Token is base unit for gamma
-    '''
-
-    def __init__(self, type: str, value: str):
+    def __init__(self, type, value, lineno=None, column=None):
         self.type = type
         self.value = value
+        self.lineno = lineno
+        self.column = column
 
     def __str__(self):
         """String representation of the class instance.
 
-        Examples:
-            Token(INTEGER, 3)
-            Token(PLUS, '+')
+        Example:
+            >>> Token(TokenType.INTEGER, 7, lineno=5, column=10)
+            Token(TokenType.INTEGER, 7, position=5:10)
         """
-        return 'Token({type}, {value})'.format(
+        return 'Token({type}, {value}, position={lineno}:{column})'.format(
             type=self.type,
-            value=repr(self.value)
+            value=repr(self.value),
+            lineno=self.lineno,
+            column=self.column,
         )
 
     def __repr__(self):
         return self.__str__()
-
-
-# reserved keywords
-RESERVED_KEYWORDS = {
-    'PROGRAM': Token(PROGRAM, 'PROGRAM'),
-    'VAR': Token(VAR, 'VAR'),
-    'INTEGER': Token(INTEGER, 'INTEGER'),
-    'REAL': Token(REAL, 'REAL'),
-    'BEGIN': Token(BEGIN, 'BEGIN'),
-    'END': Token(END, 'END'),
-    'PROCEDURE': Token(PROCEDURE, 'PROCEDURE'),
-}
 
 
 class Tokenizer(object):
@@ -50,9 +39,17 @@ class Tokenizer(object):
         # self.pos is an index into self.text
         self.pos = 0
         self.current_char = self.text[self.pos]
+        # token line number and column number
+        self.lineno = 1
+        self.column = 1
 
     def error(self):
-        raise Exception('Invalid character')
+        s = "Lexer error on '{lexeme}' line: {lineno} column: {column}".format(
+            lexeme=self.current_char,
+            lineno=self.lineno,
+            column=self.column,
+        )
+        raise LexerError(message=s)
 
     def skip_comment(self):
         while self.current_char is not '}':
@@ -71,20 +68,38 @@ class Tokenizer(object):
 
     def identify(self) -> Token:
         """Handle identifiers and reserved keywords"""
-        result = ''
-        while self.current_char is not None and (self.current_char.isalnum() or self.current_char is '_'):
-            result += self.current_char
+
+        # Create a new token with current line and column number
+        token = Token(type=None, value=None,
+                      lineno=self.lineno, column=self.column)
+
+        value = ''
+        while self.current_char is not None and self.current_char.isalnum():
+            value += self.current_char
             self.advance()
 
-        return RESERVED_KEYWORDS.get(result.upper(), Token(ID, result))
+        token_type = RESERVED_KEYWORDS.get(value.upper())
+        if token_type is None:
+            token.type = TokenType.ID
+            token.value = value
+        else:
+            # reserved keyword
+            token.type = token_type
+            token.value = value.upper()
+
+        return token
 
     def advance(self):
         """Advance the `pos` pointer and set the `current_char` variable."""
+        if self.current_char is '\n':
+            self.lineno += 1
+            self.column = 0
         self.pos += 1
         if self.pos > len(self.text) - 1:
             self.current_char = None  # Indicates end of input
         else:
             self.current_char = self.text[self.pos]
+            self.column += 1
 
     def skip_whitespace(self):
         self.current_char.isspace()
@@ -104,9 +119,9 @@ class Tokenizer(object):
             while self.current_char is not None and self.current_char.isdigit():
                 result += self.current_char
                 self.advance()
-            return Token(REAL_CONST, float(result))
+            return Token(TokenType.REAL_CONST, float(result))
         else:
-            return Token(INTEGER_CONST, int(result))
+            return Token(TokenType.INTEGER_CONST, int(result))
 
     def get_next_token(self) -> Token:
         """Lexical analyzer (also known as scanner or tokenizer)
@@ -127,59 +142,36 @@ class Tokenizer(object):
             if self.current_char.isdigit():
                 return self.number()
 
-            if self.current_char is '+':
-                self.advance()
-                return Token(PLUS, '+')
-
-            if self.current_char is '-':
-                self.advance()
-                return Token(MINUS, '-')
-
-            if self.current_char is '*':
-                self.advance()
-                return Token(MUL, '*')
-
-            if self.current_char is '/' and self.peek() is not '/':
-                self.advance()
-                return Token(FLOAT_DIV, '/')
-
             if self.current_char is '/' and self.peek() is '/':
                 self.advance()
                 self.advance()
-                return Token(INTEGER_DIV, '//')
-
-            if self.current_char is '(':
-                self.advance()
-                return Token(LPAREN, '(')
-
-            if self.current_char is ')':
-                self.advance()
-                return Token(RPAREN, ')')
+                return Token(TokenType.INTEGER_DIV, '//')
 
             if self.current_char.isalpha() or self.current_char is '_':
                 return self.identify()
 
-            if self.current_char is ':' and self.peek() is not '=':
-                self.advance()
-                return Token(COLON, ':')
-
             if self.current_char is ':' and self.peek() is '=':
                 self.advance()
                 self.advance()
-                return Token(ASSIGN, ':=')
+                return Token(TokenType.ASSIGN, ':=')
 
-            if self.current_char is ';':
+            # single-character token
+            try:
+                # get enum member by value, e.g.
+                # TokenType(';') --> TokenType.SEMI
+                token_type = TokenType(self.current_char)
+            except ValueError:
+                # no enum member with value equal to self.current_char
+                self.error()
+            else:
+                # create a token with a single-character lexeme as its value
+                token = Token(
+                    type=token_type,
+                    value=token_type.value,  # e.g. ';', '.', etc
+                    lineno=self.lineno,
+                    column=self.column,
+                )
                 self.advance()
-                return Token(SEMI, ';')
+                return token
 
-            if self.current_char is ',':
-                self.advance()
-                return Token(COMMA, ',')
-
-            if self.current_char is '.':
-                self.advance()
-                return Token(DOT, '.')
-
-            self.error()
-
-        return Token(EOF, None)
+        return Token(TokenType.EOF, None)

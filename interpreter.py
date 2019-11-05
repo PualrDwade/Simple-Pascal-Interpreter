@@ -1,7 +1,7 @@
 from visitor import Visitor
 from parser import Parser
 from tokenizer import Token
-from tokens import PLUS, MINUS, MUL, INTEGER_DIV, FLOAT_DIV
+from tokens import TokenType
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
 from semantic_analyzer import SemanticAnalyzer
 
@@ -16,22 +16,22 @@ class Interpreter(Visitor):
         self.GLOBAL_MEMORY = {}
 
     def visit_binop(self, node: BinOp):
-        if node.op.type is PLUS:
+        if node.op.type is TokenType.PLUS:
             return self.visit(node.left) + self.visit(node.right)
-        elif node.op.type is MINUS:
+        elif node.op.type is TokenType.MINUS:
             return self.visit(node.left) - self.visit(node.right)
-        elif node.op.type is MUL:
+        elif node.op.type is TokenType.MUL:
             return self.visit(node.left) * self.visit(node.right)
-        elif node.op.type is INTEGER_DIV:
+        elif node.op.type is TokenType.INTEGER_DIV:
             return self.visit(node.left) // self.visit(node.right)
-        elif node.op.type is FLOAT_DIV:
+        elif node.op.type is TokenType.FLOAT_DIV:
             return self.visit(node.left) / self.visit(node.right)
 
     def visit_num(self, node: Num):
         return node.token.value
 
     def visit_unaryop(self, node: UnaryOp):
-        if node.op.type is PLUS:
+        if node.op.type is TokenType.PLUS:
             return +self.visit(node.factor)
         else:
             return -self.visit(node.factor)
