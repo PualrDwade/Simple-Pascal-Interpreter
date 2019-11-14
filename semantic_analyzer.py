@@ -106,7 +106,7 @@ class SemanticAnalyzer(Visitor):
 
         # new scope include var declaration and formal params
         procedure_scope = ScopedSymbolTable(
-            scope_name=proc_name,
+            scope_name=proc_name.value,
             scope_level=self.current_scope.scope_level + 1,
             enclosing_scope=self.current_scope)
         self.current_scope = procedure_scope

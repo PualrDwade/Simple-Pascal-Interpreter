@@ -166,11 +166,14 @@ class Parser(object):
     def statement(self) -> AST:
         """
         statement : compound_statement
+                  | proccall_statement
                   | assignment_statement
                   | empty
         """
         if self.current_token.type is TokenType.BEGIN:
             node = self.compound_statement()
+        elif self.current_token.type is TokenType.ID and self.tokenizer.current_char is '(':
+            node = self.proccall_statement()
         elif self.current_token.type is TokenType.ID:
             node = self.assignment_statement()
         else:
@@ -186,6 +189,27 @@ class Parser(object):
         self.eat(TokenType.ASSIGN)
         right = self.expr()
         return Assign(left=left, op=op, right=right)
+
+    def proccall_statement(self) -> ProcedureCall:
+        """proccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN"""
+        procc_token = self.current_token
+        self.eat(TokenType.ID)
+        self.eat(TokenType.LPAREN)
+
+        if self.current_token.type is TokenType.RPAREN:
+            self.eat(TokenType.RPAREN)
+            return ProcedureCall(procc_token.value, [], procc_token)
+        else:
+            actual_params = []
+            actual_params.append(self.expr())
+
+            while self.current_token.type is TokenType.COMMA:
+                self.eat(TokenType.COMMA)
+                actual_params.append(self.expr())
+
+            self.eat(TokenType.RPAREN)
+
+            return ProcedureCall(procc_token.value, actual_params, procc_token)
 
     def variable(self) -> Var:
         """

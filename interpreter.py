@@ -4,6 +4,7 @@ from tokenizer import Token
 from tokens import TokenType
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
 from semantic_analyzer import SemanticAnalyzer
+from callstack import CallStack, Frame, FrameType
 
 
 class Interpreter(Visitor):
@@ -13,7 +14,11 @@ class Interpreter(Visitor):
 
     def __init__(self, parser: Parser):
         self.parser = parser
-        self.GLOBAL_MEMORY = {}
+        self.analyzer = SemanticAnalyzer()
+        self.callstack = CallStack()
+
+    def log(self, msg):
+        print(msg)
 
     def visit_binop(self, node: BinOp):
         if node.op.type is TokenType.PLUS:
@@ -41,20 +46,38 @@ class Interpreter(Visitor):
             self.visit(child)
 
     def visit_var(self, node: Var):
-        val = self.GLOBAL_MEMORY[node.value]  # get value by variable's name
-        if val is not None:
-            return val
-        raise NameError(repr(node.value))
+        current_frame = self.callstack.peek()
+        val = current_frame[node.value]  # get value by variable's name
+        return val
 
     def visit_assign(self, node: Assign):
         var_name = node.left.value  # get variable's name
-        self.GLOBAL_MEMORY[var_name] = self.visit(node.right)
+        current_frame = self.callstack.peek()
+        current_frame[var_name] = self.visit(node.right)
 
     def visit_noop(self, node: NoOp):
         pass
 
     def visit_program(self, node: Program):
+        program_name = node.name
+
+        self.log(f'ENTER: PROGRAM {program_name}')
+
+        frame = Frame(name=program_name,
+                      type=FrameType.PROGRAM,
+                      nesting_level=1)
+
+        self.callstack.push(frame)
+
+        self.log(str(self.callstack))
+
         self.visit(node.block)
+
+        self.log(f'LEAVE: PROGRAM {program_name}')
+
+        self.log(str(self.callstack))
+
+        self.callstack.pop()
 
     def visit_block(self, node: Block):
         for declaration in node.declarations:
@@ -72,6 +95,5 @@ class Interpreter(Visitor):
 
     def interpret(self) -> int:
         ast = self.parser.parse()
-        analyzer = SemanticAnalyzer()
-        analyzer.visit(ast)
-        # self.visit(ast)
+        self.analyzer.visit(ast)
+        self.visit(ast)

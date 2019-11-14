@@ -33,6 +33,8 @@ class Visitor(object):
             return self.visit_type(node)
         elif isinstance(node, ProcedureDecl):
             return self.visit_procdecl(node)
+        elif isinstance(node, ProcedureCall):
+            return self.visit_proccall(node)
         else:
             raise Exception("Invalid AST node")
 
@@ -70,4 +72,7 @@ class Visitor(object):
         pass
 
     def visit_procdecl(self, node: ProcedureDecl):
+        pass
+
+    def visit_proccall(self, node: ProcedureCall):
         pass

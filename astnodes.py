@@ -61,7 +61,7 @@ class Block(AST):
 
 
 class Program(AST):
-    def __init__(self, name, block: Block):
+    def __init__(self, name: str, block: Block):
         self.name = name
         self.block = block
 
@@ -81,3 +81,10 @@ class ProcedureDecl(AST):
         self.proc_name = proc_name
         self.block = block
         self.params = params
+
+
+class ProcedureCall(AST):
+    def __init__(self, proc_name, actual_params, token):
+        self.proc_name = proc_name
+        self.actual_params = actual_params  # a list of AST nodes
+        self.token = token
