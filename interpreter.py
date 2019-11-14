@@ -1,10 +1,10 @@
+from callstack import CallStack, Frame, FrameType
+from semantic_analyzer import SemanticAnalyzer
 from visitor import Visitor
 from parser import Parser
 from tokenizer import Token
 from tokens import TokenType
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
-from semantic_analyzer import SemanticAnalyzer
-from callstack import CallStack, Frame, FrameType
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class Interpreter(Visitor):
@@ -91,7 +91,13 @@ class Interpreter(Visitor):
         pass
 
     def visit_procdecl(self, node: ProcedureDecl):
-        self.visit_block(node.block)
+        # self.visit_block(node.block)
+        pass
+
+    def visit_proccall(self, node: ProcedureCall):
+        proc_name = node.proc_name
+        self.log(f'call procedure: {proc_name}')
+        # todo call proccall
 
     def interpret(self) -> int:
         ast = self.parser.parse()

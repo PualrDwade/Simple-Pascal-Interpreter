@@ -69,7 +69,7 @@ class Parser(object):
             PROCEDURE ID (LPAREN formal_parameter_list RPAREN)? SEMI block SEMI
         """
         self.eat(TokenType.PROCEDURE)
-        proc_name = self.current_token
+        proc_token = self.current_token
         self.eat(TokenType.ID)
         params = []
 
@@ -80,7 +80,7 @@ class Parser(object):
 
         self.eat(TokenType.SEMI)
         block_node = self.block()
-        proc_decl = ProcedureDecl(proc_name, params, block_node)
+        proc_decl = ProcedureDecl(proc_token, params, block_node)
         self.eat(TokenType.SEMI)
         return proc_decl
 

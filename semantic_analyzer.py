@@ -1,7 +1,7 @@
 from visitor import Visitor
 from errors import SemanticError, ErrorCode
 from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class SemanticAnalyzer(Visitor):
@@ -94,7 +94,7 @@ class SemanticAnalyzer(Visitor):
             )
 
     def visit_procdecl(self, node: ProcedureDecl):
-        proc_name = node.proc_name
+        proc_name = node.proc_token.value
         proc_symbol = ProcedureSymbol(proc_name)
         if self.current_scope.lookup(proc_name, current_scope_only=True) is not None:
             self.error(
@@ -106,7 +106,7 @@ class SemanticAnalyzer(Visitor):
 
         # new scope include var declaration and formal params
         procedure_scope = ScopedSymbolTable(
-            scope_name=proc_name.value,
+            scope_name=proc_name,
             scope_level=self.current_scope.scope_level + 1,
             enclosing_scope=self.current_scope)
         self.current_scope = procedure_scope
@@ -127,3 +127,15 @@ class SemanticAnalyzer(Visitor):
         print(procedure_scope)
         print('leave scope: %s' % self.current_scope.scope_name)
         self.current_scope = self.current_scope.enclosing_scope
+
+    def visit_proccall(self, node: ProcedureCall):
+        proc_name = node.proc_name
+        proc_symbol = self.current_scope.lookup(proc_name)
+        # check the arguements's number
+        formal_params = proc_symbol.params
+        actual_params = node.actual_params
+        if len(formal_params) is not len(actual_params):
+            self.error(
+                error_code=ErrorCode.UNEXPECTED_PROC_ARGUMENTS_NUMBER,
+                token=node.token
+            )

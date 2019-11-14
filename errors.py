@@ -6,6 +6,7 @@ class ErrorCode(Enum):
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
     DUPLICATE_PROC_DECL = 'Duplicate procedure found'
+    UNEXPECTED_PROC_ARGUMENTS_NUMBER = 'Unexpected procedure arguments number'
 
 
 class Error(Exception):
