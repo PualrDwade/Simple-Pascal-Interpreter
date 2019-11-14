@@ -9,7 +9,7 @@ from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, 
 
 class Interpreter(Visitor):
     '''
-    Interpreter inherit from Visitor and interpret it when visiting the abstract syntax tree 
+    Interpreter inherit from Visitor and interpret it when visiting the abstract syntax tree
     '''
 
     def __init__(self, parser: Parser):
@@ -52,8 +52,9 @@ class Interpreter(Visitor):
 
     def visit_assign(self, node: Assign):
         var_name = node.left.value  # get variable's name
+        var_value = self.visit(node.right)
         current_frame = self.callstack.peek()
-        current_frame[var_name] = self.visit(node.right)
+        current_frame[var_name] = var_value
 
     def visit_noop(self, node: NoOp):
         pass
@@ -68,16 +69,12 @@ class Interpreter(Visitor):
                       nesting_level=1)
 
         self.callstack.push(frame)
-
-        self.log(str(self.callstack))
-
         self.visit(node.block)
-
-        self.log(f'LEAVE: PROGRAM {program_name}')
 
         self.log(str(self.callstack))
 
         self.callstack.pop()
+        self.log(f'LEAVE: PROGRAM {program_name}')
 
     def visit_block(self, node: Block):
         for declaration in node.declarations:
@@ -85,19 +82,43 @@ class Interpreter(Visitor):
         self.visit(node.compound_statement)
 
     def visit_vardecl(self, node: VarDecl):
-        pass
-
-    def visit_type(self, node: Type):
-        pass
+        var_name = node.var.value
+        current_frame = self.callstack.peek()
+        current_frame[var_name] = None
 
     def visit_procdecl(self, node: ProcedureDecl):
-        # self.visit_block(node.block)
+        proc_name = node.proc_token.value
+        current_frame = self.callstack.peek()
+        current_frame[proc_name] = node
         pass
 
     def visit_proccall(self, node: ProcedureCall):
         proc_name = node.proc_name
-        self.log(f'call procedure: {proc_name}')
-        # todo call proccall
+        current_frame = self.callstack.peek()
+        proc_node: ProcedureDecl = current_frame[proc_name]
+
+        self.log(f'ENTER: PROCEDURE {proc_name}')
+
+        # get actual params values
+        actual_param_values = [self.visit(actual_param)
+                               for actual_param in node.actual_params]
+
+        # todo add enclosing frame
+        proc_frame = Frame(
+            name=proc_name, type=FrameType.PROCEDURE, nesting_level=current_frame.nesting_level+1)
+
+        self.callstack.push(proc_frame)
+        current_frame = self.callstack.peek()
+
+        # map actual params to formal params
+        for (formal_param, actual_param_value) in zip(proc_node.params, actual_param_values):
+            current_frame[formal_param.var.value] = actual_param_value
+
+        self.visit(proc_node.block)
+        self.log(str(self.callstack))
+
+        self.callstack.pop()
+        self.log(f'LEAVE: PROCEDURE {proc_name}')
 
     def interpret(self) -> int:
         ast = self.parser.parse()

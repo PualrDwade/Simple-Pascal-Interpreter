@@ -3,6 +3,7 @@ from enum import Enum
 
 class FrameType(Enum):
     PROGRAM = 'PROGRAM'
+    PROCEDURE = 'PROCEDURE'
 
 
 class Frame(object):
@@ -10,6 +11,7 @@ class Frame(object):
         self.name = name
         self.type = type
         self.nesting_level = nesting_level
+        self.enclosing_frame = None
         self.members = {}
 
     def __setitem__(self, key, value):
@@ -44,12 +46,18 @@ class CallStack(object):
         self.__frames = []
 
     def push(self, frame: Frame):
+        current_frame = self.peek()
+        if current_frame is not None:
+            frame.enclosing_frame = current_frame
+            frame.nesting_level = current_frame.nesting_level + 1
         self.__frames.append(frame)
 
     def pop(self):
         self.__frames.pop()
 
     def peek(self):
+        if len(self.__frames) is 0:
+            return None
         return self.__frames[-1]
 
     def __str__(self):
