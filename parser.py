@@ -1,7 +1,8 @@
 from tokens import TokenType
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer, Token
-from astnodes import *
+from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block,\
+    Param, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class Parser(object):
@@ -167,6 +168,7 @@ class Parser(object):
         """
         statement : compound_statement
                   | proccall_statement
+                  | if_else_statement
                   | assignment_statement
                   | empty
         """
@@ -179,6 +181,17 @@ class Parser(object):
         else:
             node = self.empty()
         return node
+
+    def if_else_statement(self) -> AST:
+        """
+        if_else_statement : if condition_statement then statement_list (else statement_list) ?
+        """
+        pass
+
+    def condition_statement(self) -> AST:
+        """
+        condition_statement : expr (EQUAL|LESS|LESS_EQUAL|GREATER|GREATER_EQUAL) expr
+        """
 
     def assignment_statement(self) -> AST:
         """

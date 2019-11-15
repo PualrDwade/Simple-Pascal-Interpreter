@@ -4,7 +4,8 @@ from visitor import Visitor
 from parser import Parser
 from tokenizer import Token
 from tokens import TokenType
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program,\
+    Block, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class Interpreter(Visitor):
@@ -46,15 +47,16 @@ class Interpreter(Visitor):
             self.visit(child)
 
     def visit_var(self, node: Var):
-        current_frame = self.callstack.peek()
-        val = current_frame[node.value]  # get value by variable's name
+        current_frame: Frame = self.callstack.peek()
+        # get value by variable's name
+        val = current_frame.get_value(node.value)
         return val
 
     def visit_assign(self, node: Assign):
         var_name = node.left.value  # get variable's name
         var_value = self.visit(node.right)
-        current_frame = self.callstack.peek()
-        current_frame[var_name] = var_value
+        current_frame: Frame = self.callstack.peek()
+        current_frame.set_value(var_name, var_value)
 
     def visit_noop(self, node: NoOp):
         pass
@@ -64,9 +66,7 @@ class Interpreter(Visitor):
 
         self.log(f'ENTER: PROGRAM {program_name}')
 
-        frame = Frame(name=program_name,
-                      type=FrameType.PROGRAM,
-                      nesting_level=1)
+        frame = Frame(name=program_name, type=FrameType.PROGRAM)
 
         self.callstack.push(frame)
         self.visit(node.block)
@@ -83,19 +83,19 @@ class Interpreter(Visitor):
 
     def visit_vardecl(self, node: VarDecl):
         var_name = node.var.value
-        current_frame = self.callstack.peek()
-        current_frame[var_name] = None
+        current_frame: Frame = self.callstack.peek()
+        current_frame.define(var_name)
 
     def visit_procdecl(self, node: ProcedureDecl):
         proc_name = node.proc_token.value
-        current_frame = self.callstack.peek()
-        current_frame[proc_name] = node
-        pass
+        current_frame: Frame = self.callstack.peek()
+        current_frame.define(proc_name)
+        current_frame.set_value(proc_name, node)
 
     def visit_proccall(self, node: ProcedureCall):
         proc_name = node.proc_name
         current_frame = self.callstack.peek()
-        proc_node: ProcedureDecl = current_frame[proc_name]
+        proc_node: ProcedureDecl = current_frame.get_value(proc_name)
 
         self.log(f'ENTER: PROCEDURE {proc_name}')
 
@@ -104,15 +104,15 @@ class Interpreter(Visitor):
                                for actual_param in node.actual_params]
 
         # todo add enclosing frame
-        proc_frame = Frame(
-            name=proc_name, type=FrameType.PROCEDURE, nesting_level=current_frame.nesting_level+1)
+        proc_frame = Frame(name=proc_name, type=FrameType.PROCEDURE)
 
         self.callstack.push(proc_frame)
-        current_frame = self.callstack.peek()
+        current_frame: Frame = self.callstack.peek()
 
         # map actual params to formal params
         for (formal_param, actual_param_value) in zip(proc_node.params, actual_param_values):
-            current_frame[formal_param.var.value] = actual_param_value
+            current_frame.define(formal_param.var.value)
+            current_frame.set_value(formal_param.var.value, actual_param_value)
 
         self.visit(proc_node.block)
         self.log(str(self.callstack))

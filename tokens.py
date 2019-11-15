@@ -14,13 +14,23 @@ class TokenType(Enum):
     DOT = '.'
     COLON = ':'
     COMMA = ','
+    INTEGER_DIV = '//'
+    EQUAL = '=='
+    LESS = '<'
+    LESS_EQUAL = '<='
+    GREATER = '>'
+    GREATER_EQUAL = '>='
+    AND = '&&'
+    OR = '||'
     # block of reserved words
     PROGRAM = 'PROGRAM'  # marks the beginning of the block
     INTEGER = 'INTEGER'
     REAL = 'REAL'
-    INTEGER_DIV = '//'
     VAR = 'VAR'
     PROCEDURE = 'PROCEDURE'
+    IF = 'IF'
+    THEN = 'THEN'
+    ELSE = 'ELSE'
     BEGIN = 'BEGIN'
     END = 'END'      # marks the end of the block
     # misc

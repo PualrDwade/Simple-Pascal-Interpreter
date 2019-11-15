@@ -1,7 +1,8 @@
 from visitor import Visitor
 from errors import SemanticError, ErrorCode
 from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block,\
+    VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class SemanticAnalyzer(Visitor):

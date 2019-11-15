@@ -7,21 +7,31 @@ class FrameType(Enum):
 
 
 class Frame(object):
-    def __init__(self, name: str, type: FrameType, nesting_level: int):
+    def __init__(self, name: str, type: FrameType):
         self.name = name
         self.type = type
-        self.nesting_level = nesting_level
-        self.enclosing_frame = None
+        self.nesting_level = None
+        self.enclosing_frame: Frame = None
         self.members = {}
 
-    def __setitem__(self, key, value):
-        self.members[key] = value
+    def define(self, key):
+        self.members[key] = None
 
-    def __getitem__(self, key):
-        return self.members[key]
+    def get_value(self, key):
+        if key in self.members.keys():
+            return self.members[key]
+        elif self.enclosing_frame is not None:
+            return self.enclosing_frame.get_value(key)
+        else:
+            raise Exception('undefined id: %s' % key)
 
-    def get(self, key):
-        return self.members.get(key)
+    def set_value(self, key, value):
+        if key in self.members.keys():
+            self.members[key] = value
+        elif self.enclosing_frame is not None:
+            self.enclosing_frame.set_value(key, value)
+        else:
+            raise Exception('undefined id: %s' % key)
 
     def __str__(self):
         lines = [
@@ -46,8 +56,11 @@ class CallStack(object):
         self.__frames = []
 
     def push(self, frame: Frame):
-        current_frame = self.peek()
-        if current_frame is not None:
+        current_frame: Frame = self.peek()
+        if current_frame is None:
+            frame.nesting_level = 1
+            frame.enclosing_frame = None
+        else:
             frame.enclosing_frame = current_frame
             frame.nesting_level = current_frame.nesting_level + 1
         self.__frames.append(frame)
@@ -62,7 +75,7 @@ class CallStack(object):
 
     def __str__(self):
         s = '\n'.join(repr(ar) for ar in reversed(self.__frames))
-        s = f'CALL STACK\n{s}\n'
+        s = f'CALL STACK(memory contents):\n{s}\n'
         return s
 
     def __repr__(self):

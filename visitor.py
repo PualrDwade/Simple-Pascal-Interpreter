@@ -1,5 +1,6 @@
 from tokenizer import Token
-from astnodes import *
+from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp,\
+    Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class Visitor(object):

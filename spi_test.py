@@ -3,17 +3,26 @@ from parser import Parser
 from interpreter import Interpreter
 
 
-def test_proccall():
-    text = """\
+def run(code: str):
+    """run code helper function"""
+    tokenizer = Tokenizer(code)
+    parser = Parser(tokenizer)
+    interpreter = Interpreter(parser)
+    interpreter.interpret()
+
+
+def test_simple_proccall():
+    code = """\
     program Main;
 
     var 
-    a : integer;
-    b : integer;
-    c : integer;
+        a : integer;
+        b : integer;
+        c : integer;
 
     procedure alpha(a, b : integer);
     begin
+        c := a + b;
     end;
 
     begin
@@ -22,7 +31,4 @@ def test_proccall():
         alpha(a,b);
     end.
     """
-    tokenizer = Tokenizer(text)
-    parser = Parser(tokenizer)
-    interpreter = Interpreter(parser)
-    interpreter.interpret()
+    run(code)
