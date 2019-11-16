@@ -1,3 +1,5 @@
+from typing import Optional
+
 from tokens import TokenType, RESERVED_KEYWORDS
 from errors import LexerError
 
@@ -28,10 +30,10 @@ class Token(object):
 
 
 class Tokenizer(object):
-    '''
+    """
     Tokenizer analysis given text and parse it to tokens
     it also names Lexer
-    '''
+    """
 
     def __init__(self, text: str):
         # client string input, e.g. "3 + 5", "12 - 5 + 3", etc
@@ -53,12 +55,12 @@ class Tokenizer(object):
 
     def skip_comment(self):
         while self.current_char is not '}':
-            if self.pos == len(self.text)-1:
+            if self.pos == len(self.text) - 1:
                 raise Exception('Unclosed comment')
             self.advance()
         self.advance()
 
-    def peek(self) -> str:
+    def peek(self) -> Optional[str]:
         """peek return the next character but don't change the pos."""
         peek_pos = self.pos + 1
         if peek_pos is len(self.text):
@@ -70,8 +72,7 @@ class Tokenizer(object):
         """Handle identifiers and reserved keywords"""
 
         # Create a new token with current line and column number
-        token = Token(type=None, value=None,
-                      lineno=self.lineno, column=self.column)
+        token = Token(type=None, value=None, lineno=self.lineno, column=self.column)
 
         value = ''
         while self.current_char is not None and self.current_char.isalnum():

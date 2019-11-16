@@ -32,7 +32,7 @@ class TokenType(Enum):
     THEN = 'THEN'
     ELSE = 'ELSE'
     BEGIN = 'BEGIN'
-    END = 'END'      # marks the end of the block
+    END = 'END'  # marks the end of the block
     # misc
     ID = 'ID'
     INTEGER_CONST = 'INTEGER_CONST'

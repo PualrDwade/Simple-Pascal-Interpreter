@@ -49,9 +49,9 @@ class Type(AST):
 
 
 class VarDecl(AST):
-    def __init__(self, var: Var, type: Type):
-        self.var = var
-        self.type = type
+    def __init__(self, var_node: Var, type_node: Type):
+        self.var_node = var_node
+        self.type_node = type_node
 
 
 class Block(AST):

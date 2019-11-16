@@ -1,15 +1,14 @@
-from visitor import Visitor
-from errors import SemanticError, ErrorCode
+from astnodes import Compound, Var, Assign, Program, Block, VarDecl, ProcedureDecl, ProcedureCall
 from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block,\
-    VarDecl, Type, ProcedureDecl, ProcedureCall
+from errors import SemanticError, ErrorCode
+from visitor import Visitor
 
 
 class SemanticAnalyzer(Visitor):
-    '''
+    """
     SemanticAnalyzer inherit from Visitor and it's work is
     build program's symbol table by given AST parsed by Parser
-    '''
+    """
 
     def __init__(self):
         self.buildin_scope = ScopedSymbolTable(
@@ -62,17 +61,17 @@ class SemanticAnalyzer(Visitor):
         self.visit(node.right)
 
     def visit_vardecl(self, node: VarDecl):
-        type_name = node.type.type
+        type_name = node.type_node.type
         type_symbol = self.current_scope.lookup(type_name)
 
         # We have all the information we need to create a variable symbol.
         # Create the symbol and insert it into the symbol table.
-        var_name = node.var.value
+        var_name = node.var_node.value
         # duplicate define check
         if self.current_scope.lookup(var_name, current_scope_only=True) is not None:
             self.error(
                 error_code=ErrorCode.DUPLICATE_ID,
-                token=node.var.token,
+                token=node.var_node.token,
             )
 
         var_symbol = VarSymbol(var_name, type_symbol)
@@ -131,7 +130,7 @@ class SemanticAnalyzer(Visitor):
 
     def visit_proccall(self, node: ProcedureCall):
         proc_name = node.proc_name
-        proc_symbol = self.current_scope.lookup(proc_name)
+        proc_symbol: ProcedureSymbol = self.current_scope.lookup(proc_name)
         # check the arguements's number
         formal_params = proc_symbol.params
         actual_params = node.actual_params

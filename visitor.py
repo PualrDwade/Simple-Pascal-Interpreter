@@ -1,13 +1,12 @@
-from tokenizer import Token
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp,\
     Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
 
 
 class Visitor(object):
-    '''
+    """
     Visitor is common base class to visit abstract syntax tree
     each concrete visitor should implement its visit method
-    '''
+    """
 
     def visit(self, node: AST):
         if isinstance(node, BinOp):

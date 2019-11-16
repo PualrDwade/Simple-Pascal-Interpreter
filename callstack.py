@@ -8,10 +8,10 @@ class FrameType(Enum):
 
 class Frame(object):
     def __init__(self, name: str, type: FrameType):
+        self.enclosing_frame = None
         self.name = name
         self.type = type
         self.nesting_level = None
-        self.enclosing_frame: Frame = None
         self.members = {}
 
     def define(self, key):

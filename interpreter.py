@@ -1,24 +1,24 @@
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, \
+    Block, VarDecl, ProcedureDecl, ProcedureCall
 from callstack import CallStack, Frame, FrameType
-from semantic_analyzer import SemanticAnalyzer
-from visitor import Visitor
 from parser import Parser
-from tokenizer import Token
+from semantic_analyzer import SemanticAnalyzer
 from tokens import TokenType
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program,\
-    Block, VarDecl, Type, ProcedureDecl, ProcedureCall
+from visitor import Visitor
 
 
 class Interpreter(Visitor):
-    '''
+    """
     Interpreter inherit from Visitor and interpret it when visiting the abstract syntax tree
-    '''
+    """
 
     def __init__(self, parser: Parser):
         self.parser = parser
         self.analyzer = SemanticAnalyzer()
         self.callstack = CallStack()
 
-    def log(self, msg):
+    @staticmethod
+    def log(msg):
         print(msg)
 
     def visit_binop(self, node: BinOp):
@@ -82,7 +82,7 @@ class Interpreter(Visitor):
         self.visit(node.compound_statement)
 
     def visit_vardecl(self, node: VarDecl):
-        var_name = node.var.value
+        var_name = node.var_node.value
         current_frame: Frame = self.callstack.peek()
         current_frame.define(var_name)
 
@@ -103,7 +103,6 @@ class Interpreter(Visitor):
         actual_param_values = [self.visit(actual_param)
                                for actual_param in node.actual_params]
 
-        # todo add enclosing frame
         proc_frame = Frame(name=proc_name, type=FrameType.PROCEDURE)
 
         self.callstack.push(proc_frame)
@@ -120,7 +119,7 @@ class Interpreter(Visitor):
         self.callstack.pop()
         self.log(f'LEAVE: PROCEDURE {proc_name}')
 
-    def interpret(self) -> int:
+    def interpret(self):
         ast = self.parser.parse()
         self.analyzer.visit(ast)
         self.visit(ast)

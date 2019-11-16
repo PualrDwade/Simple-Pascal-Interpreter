@@ -1,8 +1,8 @@
-from tokens import TokenType
-from errors import ParserError, ErrorCode
-from tokenizer import Tokenizer, Token
-from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block,\
+from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
     Param, VarDecl, Type, ProcedureDecl, ProcedureCall
+from errors import ParserError, ErrorCode
+from tokenizer import Tokenizer
+from tokens import TokenType
 
 
 class Parser(object):
@@ -89,7 +89,6 @@ class Parser(object):
         """ formal_parameter_list : formal_parameters
                               | formal_parameters SEMI formal_parameter_list
         """
-        #  procedure foo()
         if not self.current_token.type is TokenType.ID:
             return []
 
@@ -213,15 +212,12 @@ class Parser(object):
             self.eat(TokenType.RPAREN)
             return ProcedureCall(procc_token.value, [], procc_token)
         else:
-            actual_params = []
-            actual_params.append(self.expr())
-
+            actual_params = [self.expr()]
             while self.current_token.type is TokenType.COMMA:
                 self.eat(TokenType.COMMA)
                 actual_params.append(self.expr())
 
             self.eat(TokenType.RPAREN)
-
             return ProcedureCall(procc_token.value, actual_params, procc_token)
 
     def variable(self) -> Var:
