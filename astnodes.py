@@ -25,6 +25,11 @@ class Num(AST):
         self.token = token
 
 
+class Boolean(AST):
+    def __init__(self, token: Token):
+        self.token = token
+
+
 class Compound(AST):
     def __init__(self):
         self.childrens = []  # use list to combine many compound
@@ -67,10 +72,6 @@ class Program(AST):
         self.block = block
 
 
-class NoOp(AST):
-    pass
-
-
 class Param(AST):
     def __init__(self, var_node: Var, type_node: Type):
         self.var_node = var_node
@@ -89,3 +90,27 @@ class ProcedureCall(AST):
         self.proc_name = proc_name
         self.actual_params = actual_params  # a list of AST nodes
         self.token = token
+
+
+class Then(AST):
+    def __init__(self, token: Token, child: Compound):
+        self.token = token
+        self.child = child
+
+
+class Else(AST):
+    def __init__(self, token: Token, child: Compound):
+        self.token = token
+        self.child = child
+
+
+class Condition(AST):
+    def __init__(self, token: Token, condition_node: AST, then_node: Then, else_node: Else):
+        self.token = token
+        self.condition_node = condition_node
+        self.then_node = then_node
+        self.else_node = else_node
+
+
+class NoOp(AST):
+    pass

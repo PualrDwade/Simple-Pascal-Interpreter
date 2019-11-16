@@ -115,14 +115,23 @@ class Tokenizer(object):
             self.advance()
 
         if self.current_char is '.':
-            # combine float value
             self.advance()
             while self.current_char is not None and self.current_char.isdigit():
                 result += self.current_char
                 self.advance()
-            return Token(TokenType.REAL_CONST, float(result))
+            return Token(
+                type=TokenType.REAL_CONST,
+                value=float(result),
+                lineno=self.lineno,
+                column=self.column
+            )
         else:
-            return Token(TokenType.INTEGER_CONST, int(result))
+            return Token(
+                type=TokenType.INTEGER_CONST,
+                value=int(result),
+                lineno=self.lineno,
+                column=self.column
+            )
 
     def get_next_token(self) -> Token:
         """Lexical analyzer (also known as scanner or tokenizer)
@@ -146,7 +155,12 @@ class Tokenizer(object):
             if self.current_char is '/' and self.peek() is '/':
                 self.advance()
                 self.advance()
-                return Token(TokenType.INTEGER_DIV, '//')
+                return Token(
+                    type=TokenType.INTEGER_DIV,
+                    value='//',
+                    lineno=self.lineno,
+                    column=self.column
+                )
 
             if self.current_char.isalpha() or self.current_char is '_':
                 return self.identify()
@@ -154,22 +168,42 @@ class Tokenizer(object):
             if self.current_char is ':' and self.peek() is '=':
                 self.advance()
                 self.advance()
-                return Token(TokenType.ASSIGN, ':=')
+                return Token(
+                    type=TokenType.ASSIGN,
+                    value=':=',
+                    lineno=self.lineno,
+                    column=self.column
+                )
 
             if self.current_char is '<' and self.peek() is '>':
                 self.advance()
                 self.advance()
-                return Token(TokenType.NOT_EQUAL, '<>')
+                return Token(
+                    type=TokenType.NOT_EQUALS,
+                    value='<>',
+                    lineno=self.lineno,
+                    column=self.column
+                )
 
             if self.current_char is '<' and self.peek() is '=':
                 self.advance()
                 self.advance()
-                return Token(TokenType.LESS_EQUAL, '<=')
+                return Token(
+                    type=TokenType.LESS_EQUALS,
+                    value='<=',
+                    lineno=self.lineno,
+                    column=self.column
+                )
 
             if self.current_char is '>' and self.peek() is '=':
                 self.advance()
                 self.advance()
-                return Token(TokenType.GREATER_EQUAL, '>=')
+                return Token(
+                    type=TokenType.GREATER_EQUALS,
+                    value='>=',
+                    lineno=self.lineno,
+                    column=self.column
+                )
 
             # single-character token
             try:

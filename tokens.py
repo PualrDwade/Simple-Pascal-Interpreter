@@ -11,7 +11,7 @@ class TokenType(Enum):
     COLON = ':'
     COMMA = ','
 
-    # arithmetic Operators
+    # arithmetic operators
     PLUS = '+'
     MINUS = '-'
     MUL = '*'
@@ -19,22 +19,18 @@ class TokenType(Enum):
     INTEGER_DIV = '//'
     MOD = '%'
 
-    # relational Operators
-    EQUAL = '='
-    NOT_EQUAL = '<>'
+    # relational operators
+    EQUALS = '='
+    NOT_EQUALS = '<>'
     LESS = '<'
-    LESS_EQUAL = '<='
+    LESS_EQUALS = '<='
     GREATER = '>'
-    GREATER_EQUAL = '>='
-
-    # boolean Operators
-    AND = 'AND'
-    OR = 'OR'
-    NOT = 'NOT'
+    GREATER_EQUALS = '>='
 
     # block of reserved words
     PROGRAM = 'PROGRAM'  # marks the beginning of the block
     INTEGER = 'INTEGER'
+    BOOLEAN = 'BOOLEAN'
     REAL = 'REAL'
     VAR = 'VAR'
     PROCEDURE = 'PROCEDURE'
@@ -42,7 +38,13 @@ class TokenType(Enum):
     THEN = 'THEN'
     ELSE = 'ELSE'
     BEGIN = 'BEGIN'
+    TRUE = 'TRUE'
+    FALSE = 'FALSE'
+    AND = 'AND'
+    OR = 'OR'
+    NOT = 'NOT'
     END = 'END'  # marks the end of the block
+
     # misc
     ID = 'ID'
     INTEGER_CONST = 'INTEGER_CONST'

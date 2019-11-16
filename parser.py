@@ -1,5 +1,5 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
-    Param, VarDecl, Type, ProcedureDecl, ProcedureCall
+    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
@@ -133,13 +133,13 @@ class Parser(object):
     def type_spec(self) -> Type:
         """type_spec : INTEGER
                      | REAL
+                     | BOOLEAN
         """
         token = self.current_token
-        if token.type is TokenType.INTEGER:
-            self.eat(TokenType.INTEGER)
-        else:
-            self.eat(TokenType.REAL)
-        return Type(token)
+        if token.type in (TokenType.INTEGER, TokenType.REAL, TokenType.BOOLEAN):
+            self.eat(token.type)
+            return Type(token)
+        self.error(error_code=ErrorCode.UNEXPECTED_TOKEN, token=token)
 
     def compound_statement(self) -> Compound:
         """compound_statement: BEGIN statement_list END"""
@@ -233,66 +233,143 @@ class Parser(object):
         """An empty production"""
         return NoOp()
 
-    def factor(self) -> AST:
+    def first_precedence(self) -> AST:
         """
         factor: PLUS  factor
               | MINUS factor
+              | NOT factor
               | INTEGER_CONST
               | REAL_CONST
+              | TRUE
+              | FALSE
               | LPAREN expr RPAREN
               | variable
         """
         token = self.current_token
         if token.type is TokenType.PLUS:
             self.eat(TokenType.PLUS)
-            return UnaryOp(op=token, factor=self.factor())
+            return UnaryOp(op=token, factor=self.first_precedence())
+
         elif token.type is TokenType.MINUS:
             self.eat(TokenType.MINUS)
-            return UnaryOp(op=token, factor=self.factor())
+            return UnaryOp(op=token, factor=self.first_precedence())
+
+        elif token.type is TokenType.NOT:
+            self.eat(TokenType.NOT)
+            return UnaryOp(op=token, factor=self.first_precedence())
+
         elif token.type is TokenType.INTEGER_CONST:
             self.eat(TokenType.INTEGER_CONST)
             return Num(token)
+
         elif token.type is TokenType.REAL_CONST:
             self.eat(TokenType.REAL_CONST)
             return Num(token)
+
+        elif token.type is TokenType.TRUE:
+            self.eat(TokenType.TRUE)
+            return Boolean(token)
+
+        elif token.type is TokenType.FALSE:
+            self.eat(TokenType.FALSE)
+            return Boolean(token)
+
         elif token.type is TokenType.LPAREN:
             self.eat(TokenType.LPAREN)
             node = self.expr()
             self.eat(TokenType.RPAREN)
             return node
+
         else:
             return self.variable()
 
-    def term(self) -> AST:
-        """term : factor ((MUL | DIV) factor)*"""
-        node = self.factor()
-
-        while self.current_token.type in (TokenType.MUL, TokenType.INTEGER_DIV, TokenType.FLOAT_DIV):
+    def second_precedence(self) -> AST:
+        """term : factor ((MUL | DIV | MOD) factor)*"""
+        left = self.first_precedence()
+        result = left
+        while self.current_token.type in (TokenType.MUL,
+                                          TokenType.INTEGER_DIV,
+                                          TokenType.FLOAT_DIV,
+                                          TokenType.MOD):
             token = self.current_token
-            if token.type == TokenType.MUL:
-                self.eat(TokenType.MUL)
-            elif token.type == TokenType.INTEGER_DIV:
-                self.eat(TokenType.INTEGER_DIV)
-            else:
-                self.eat(TokenType.FLOAT_DIV)
-            node = BinOp(left=node, op=token, right=self.factor())
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.first_precedence())
 
-        return node
+        return result
 
-    def expr(self) -> AST:
-        """expr: term((PLUS | MINUS) term)*"""
-        node = self.term()
+    def third_precedence(self) -> AST:
+        """simple_expr: term((PLUS | MINUS) term)*"""
+        left = self.second_precedence()
+        result = left
 
         while self.current_token.type in (TokenType.PLUS, TokenType.MINUS):
             token = self.current_token
-            if token.type == TokenType.PLUS:
-                self.eat(TokenType.PLUS)
-            else:
-                self.eat(TokenType.MINUS)
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.second_precedence())
 
-            node = BinOp(left=node, op=token, right=self.term())
+        return result
 
-        return node
+    def fourth_precedence(self) -> AST:
+        """
+        GREATER| GREATER_EQUALS| LESS| LESS_EQUALS
+        """
+        left = self.third_precedence()
+        result = left
+
+        while self.current_token.type in (TokenType.GREATER,
+                                          TokenType.GREATER_EQUALS,
+                                          TokenType.LESS,
+                                          TokenType.LESS_EQUALS):
+            token = self.current_token
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.third_precedence())
+
+        return result
+
+    def fifth_precedence(self) -> AST:
+        """
+        EQUALS|NOT_EQUALS
+        """
+        left = self.fourth_precedence()
+        result = left
+
+        while self.current_token.type in (TokenType.EQUALS, TokenType.NOT_EQUALS):
+            token = self.current_token
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.fourth_precedence())
+
+        return result
+
+    def sixth_precedence(self) -> AST:
+        """
+        AND
+        """
+        left = self.fifth_precedence()
+        result = left
+
+        while self.current_token.type is TokenType.AND:
+            token = self.current_token
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.fifth_precedence())
+
+        return result
+
+    def seventh_precedence(self) -> AST:
+        """
+        OR
+        """
+        left = self.sixth_precedence()
+        result = left
+
+        while self.current_token.type is TokenType.OR:
+            token = self.current_token
+            self.eat(token.type)
+            result = BinOp(left=left, op=token, right=self.sixth_precedence())
+
+        return result
+
+    def expr(self) -> AST:
+        return self.seventh_precedence()
 
     def parse(self) -> AST:
         node = self.program()
