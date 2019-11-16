@@ -3,6 +3,7 @@ from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Prog
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
+from typing import List
 
 
 class Parser(object):
@@ -34,7 +35,7 @@ class Parser(object):
         """program : PROGRAM variable SEMI block DOT"""
         self.eat(TokenType.PROGRAM)
         var_node = self.variable()
-        programe_name = var_node.value  # value hold the variable's name
+        programe_name = var_node.name  # value hold the variable's name
         self.eat(TokenType.SEMI)
         block = self.block()
         self.eat(TokenType.DOT)
@@ -46,7 +47,7 @@ class Parser(object):
         compound_statement = self.compound_statement()
         return Block(declarations, compound_statement)
 
-    def declarations(self) -> [AST]:
+    def declarations(self) -> List[AST]:
         """
         declarations : (VAR (variable_declaration SEMI)+)? procedure_declaration*
         """
@@ -85,7 +86,7 @@ class Parser(object):
         self.eat(TokenType.SEMI)
         return proc_decl
 
-    def formal_parameter_list(self) -> [Param]:
+    def formal_parameter_list(self) -> List[Param]:
         """ formal_parameter_list : formal_parameters
                               | formal_parameters SEMI formal_parameter_list
         """
@@ -99,7 +100,7 @@ class Parser(object):
 
         return params
 
-    def formal_parameters(self) -> [Param]:
+    def formal_parameters(self) -> List[Param]:
         """ formal_parameters : ID (COMMA ID)* COLON type_spec """
         var_nodes = [Var(self.current_token)]
         self.eat(TokenType.ID)
@@ -111,9 +112,9 @@ class Parser(object):
 
         self.eat(TokenType.COLON)
         type_node = self.type_spec()
-        return [Param(var=var, type=type_node) for var in var_nodes]
+        return [Param(var_node=var_node, type_node=type_node) for var_node in var_nodes]
 
-    def variable_declaration(self) -> [VarDecl]:
+    def variable_declaration(self) -> List[VarDecl]:
         """variable_declaration : ID (COMMA ID)* COLON type_spec"""
         var_nodes = [Var(self.current_token)]
         self.eat(TokenType.ID)
@@ -127,7 +128,7 @@ class Parser(object):
 
         type_node = self.type_spec()
 
-        return [VarDecl(var_node, type_node) for var_node in var_nodes]
+        return [VarDecl(var_node=var_node, type_node=type_node) for var_node in var_nodes]
 
     def type_spec(self) -> Type:
         """type_spec : INTEGER
@@ -150,7 +151,7 @@ class Parser(object):
             root.childrens.append(node)
         return root
 
-    def statement_list(self) -> [AST]:
+    def statement_list(self) -> List[AST]:
         """
         statement_list : statement
                        | statement SEMI statement_list

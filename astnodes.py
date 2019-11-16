@@ -1,4 +1,5 @@
 from tokenizer import Token
+from typing import List
 
 
 class AST(object):
@@ -32,7 +33,7 @@ class Compound(AST):
 class Var(AST):
     def __init__(self, token: Token):
         self.token = token
-        self.value = token.value  # self.value holds the variable's name
+        self.name = token.value  # self.value holds the variable's name
 
 
 class Assign(AST):
@@ -45,7 +46,7 @@ class Assign(AST):
 class Type(AST):
     def __init__(self, token: Token):
         self.token = token
-        self.type = token.value
+        self.name = token.value
 
 
 class VarDecl(AST):
@@ -55,7 +56,7 @@ class VarDecl(AST):
 
 
 class Block(AST):
-    def __init__(self, declarations: [VarDecl], compound_statement: Compound):
+    def __init__(self, declarations: List[VarDecl], compound_statement: Compound):
         self.declarations = declarations
         self.compound_statement = compound_statement
 
@@ -71,20 +72,20 @@ class NoOp(AST):
 
 
 class Param(AST):
-    def __init__(self, var: Var, type: Type):
-        self.var = var
-        self.type = type
+    def __init__(self, var_node: Var, type_node: Type):
+        self.var_node = var_node
+        self.type_node = type_node
 
 
 class ProcedureDecl(AST):
-    def __init__(self, proc_token: Token, params: [Param], block: Block):
+    def __init__(self, proc_token: Token, params: List[Param], block: Block):
         self.proc_token = proc_token
         self.block = block
         self.params = params
 
 
 class ProcedureCall(AST):
-    def __init__(self, proc_name: str, actual_params: [AST], token: Token):
+    def __init__(self, proc_name: str, actual_params: List[AST], token: Token):
         self.proc_name = proc_name
         self.actual_params = actual_params  # a list of AST nodes
         self.token = token

@@ -3,25 +3,35 @@ from enum import Enum
 
 
 class TokenType(Enum):
-    # single-character token types
-    PLUS = '+'
-    MINUS = '-'
-    MUL = '*'
-    FLOAT_DIV = '/'
+    # single character tokens
     LPAREN = '('
     RPAREN = ')'
     SEMI = ';'
     DOT = '.'
     COLON = ':'
     COMMA = ','
+
+    # arithmetic Operators
+    PLUS = '+'
+    MINUS = '-'
+    MUL = '*'
+    FLOAT_DIV = '/'
     INTEGER_DIV = '//'
-    EQUAL = '=='
+    MOD = '%'
+
+    # relational Operators
+    EQUAL = '='
+    NOT_EQUAL = '<>'
     LESS = '<'
     LESS_EQUAL = '<='
     GREATER = '>'
     GREATER_EQUAL = '>='
-    AND = '&&'
-    OR = '||'
+
+    # boolean Operators
+    AND = 'AND'
+    OR = 'OR'
+    NOT = 'NOT'
+
     # block of reserved words
     PROGRAM = 'PROGRAM'  # marks the beginning of the block
     INTEGER = 'INTEGER'
@@ -53,7 +63,6 @@ def build_reserved_keywords():
         {'PROGRAM': <TokenType.PROGRAM: 'PROGRAM'>,
          'INTEGER': <TokenType.INTEGER: 'INTEGER'>,
          'REAL': <TokenType.REAL: 'REAL'>,
-         'DIV': <TokenType.INTEGER_DIV: 'DIV'>,
          'VAR': <TokenType.VAR: 'VAR'>,
          'PROCEDURE': <TokenType.PROCEDURE: 'PROCEDURE'>,
          'BEGIN': <TokenType.BEGIN: 'BEGIN'>,

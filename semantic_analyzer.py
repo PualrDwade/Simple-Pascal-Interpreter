@@ -61,12 +61,12 @@ class SemanticAnalyzer(Visitor):
         self.visit(node.right)
 
     def visit_vardecl(self, node: VarDecl):
-        type_name = node.type_node.type
+        type_name = node.type_node.name
         type_symbol = self.current_scope.lookup(type_name)
 
         # We have all the information we need to create a variable symbol.
         # Create the symbol and insert it into the symbol table.
-        var_name = node.var_node.value
+        var_name = node.var_node.name
         # duplicate define check
         if self.current_scope.lookup(var_name, current_scope_only=True) is not None:
             self.error(
@@ -85,7 +85,7 @@ class SemanticAnalyzer(Visitor):
 
     def visit_var(self, node: Var):
         # judge if variable is not declared
-        var_name = node.value
+        var_name = node.name
         var_symbol = self.current_scope.lookup(var_name)
         if var_symbol is None:
             self.error(
@@ -115,8 +115,8 @@ class SemanticAnalyzer(Visitor):
         print('enter scope: %s' % self.current_scope.scope_name)
         # intert params into the procedure scope
         for param in node.params:
-            param_name = param.var.value
-            param_type = self.current_scope.lookup(param.type.type)
+            param_name = param.var_node.name
+            param_type = self.current_scope.lookup(param.type_node.name)
             # build var symbol and append to proc_symbol
             var_symbol = VarSymbol(name=param_name, type=param_type)
             proc_symbol.params.append(var_symbol)

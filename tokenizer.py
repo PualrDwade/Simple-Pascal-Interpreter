@@ -156,6 +156,21 @@ class Tokenizer(object):
                 self.advance()
                 return Token(TokenType.ASSIGN, ':=')
 
+            if self.current_char is '<' and self.peek() is '>':
+                self.advance()
+                self.advance()
+                return Token(TokenType.NOT_EQUAL, '<>')
+
+            if self.current_char is '<' and self.peek() is '=':
+                self.advance()
+                self.advance()
+                return Token(TokenType.LESS_EQUAL, '<=')
+
+            if self.current_char is '>' and self.peek() is '=':
+                self.advance()
+                self.advance()
+                return Token(TokenType.GREATER_EQUAL, '>=')
+
             # single-character token
             try:
                 # get enum member by value, e.g.

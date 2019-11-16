@@ -49,11 +49,11 @@ class Interpreter(Visitor):
     def visit_var(self, node: Var):
         current_frame: Frame = self.callstack.peek()
         # get value by variable's name
-        val = current_frame.get_value(node.value)
+        val = current_frame.get_value(node.name)
         return val
 
     def visit_assign(self, node: Assign):
-        var_name = node.left.value  # get variable's name
+        var_name = node.left.name  # get variable's name
         var_value = self.visit(node.right)
         current_frame: Frame = self.callstack.peek()
         current_frame.set_value(var_name, var_value)
@@ -82,7 +82,7 @@ class Interpreter(Visitor):
         self.visit(node.compound_statement)
 
     def visit_vardecl(self, node: VarDecl):
-        var_name = node.var_node.value
+        var_name = node.var_node.name
         current_frame: Frame = self.callstack.peek()
         current_frame.define(var_name)
 
@@ -110,8 +110,8 @@ class Interpreter(Visitor):
 
         # map actual params to formal params
         for (formal_param, actual_param_value) in zip(proc_node.params, actual_param_values):
-            current_frame.define(formal_param.var.value)
-            current_frame.set_value(formal_param.var.value, actual_param_value)
+            current_frame.define(formal_param.var_node.name)
+            current_frame.set_value(formal_param.var_node.name, actual_param_value)
 
         self.visit(proc_node.block)
         self.log(str(self.callstack))
