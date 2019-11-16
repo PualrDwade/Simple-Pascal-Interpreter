@@ -1,7 +1,5 @@
-from typing import Optional
-
-from tokens import TokenType, RESERVED_KEYWORDS
 from errors import LexerError
+from tokens import TokenType, RESERVED_KEYWORDS
 
 
 class Token(object):
@@ -60,7 +58,7 @@ class Tokenizer(object):
             self.advance()
         self.advance()
 
-    def peek(self) -> Optional[str]:
+    def peek(self) -> str:
         """peek return the next character but don't change the pos."""
         peek_pos = self.pos + 1
         if peek_pos is len(self.text):
