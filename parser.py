@@ -233,7 +233,7 @@ class Parser(object):
         """An empty production"""
         return NoOp()
 
-    def first_precedence(self) -> AST:
+    def first_priority(self) -> AST:
         """
         factor: PLUS  factor
               | MINUS factor
@@ -248,15 +248,15 @@ class Parser(object):
         token = self.current_token
         if token.type is TokenType.PLUS:
             self.eat(TokenType.PLUS)
-            return UnaryOp(op=token, factor=self.first_precedence())
+            return UnaryOp(op=token, factor=self.first_priority())
 
         elif token.type is TokenType.MINUS:
             self.eat(TokenType.MINUS)
-            return UnaryOp(op=token, factor=self.first_precedence())
+            return UnaryOp(op=token, factor=self.first_priority())
 
         elif token.type is TokenType.NOT:
             self.eat(TokenType.NOT)
-            return UnaryOp(op=token, factor=self.first_precedence())
+            return UnaryOp(op=token, factor=self.first_priority())
 
         elif token.type is TokenType.INTEGER_CONST:
             self.eat(TokenType.INTEGER_CONST)
@@ -283,9 +283,9 @@ class Parser(object):
         else:
             return self.variable()
 
-    def second_precedence(self) -> AST:
+    def second_priority(self) -> AST:
         """term : factor ((MUL | DIV | MOD) factor)*"""
-        left = self.first_precedence()
+        left = self.first_priority()
         result = left
         while self.current_token.type in (TokenType.MUL,
                                           TokenType.INTEGER_DIV,
@@ -293,27 +293,27 @@ class Parser(object):
                                           TokenType.MOD):
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.first_precedence())
+            result = BinOp(left=left, op=token, right=self.first_priority())
 
         return result
 
-    def third_precedence(self) -> AST:
+    def third_priority(self) -> AST:
         """simple_expr: term((PLUS | MINUS) term)*"""
-        left = self.second_precedence()
+        left = self.second_priority()
         result = left
 
         while self.current_token.type in (TokenType.PLUS, TokenType.MINUS):
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.second_precedence())
+            result = BinOp(left=left, op=token, right=self.second_priority())
 
         return result
 
-    def fourth_precedence(self) -> AST:
+    def fourth_priority(self) -> AST:
         """
         GREATER| GREATER_EQUALS| LESS| LESS_EQUALS
         """
-        left = self.third_precedence()
+        left = self.third_priority()
         result = left
 
         while self.current_token.type in (TokenType.GREATER,
@@ -322,54 +322,54 @@ class Parser(object):
                                           TokenType.LESS_EQUALS):
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.third_precedence())
+            result = BinOp(left=left, op=token, right=self.third_priority())
 
         return result
 
-    def fifth_precedence(self) -> AST:
+    def fifth_priority(self) -> AST:
         """
         EQUALS|NOT_EQUALS
         """
-        left = self.fourth_precedence()
+        left = self.fourth_priority()
         result = left
 
         while self.current_token.type in (TokenType.EQUALS, TokenType.NOT_EQUALS):
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.fourth_precedence())
+            result = BinOp(left=left, op=token, right=self.fourth_priority())
 
         return result
 
-    def sixth_precedence(self) -> AST:
+    def sixth_priority(self) -> AST:
         """
         AND
         """
-        left = self.fifth_precedence()
+        left = self.fifth_priority()
         result = left
 
         while self.current_token.type is TokenType.AND:
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.fifth_precedence())
+            result = BinOp(left=left, op=token, right=self.fifth_priority())
 
         return result
 
-    def seventh_precedence(self) -> AST:
+    def seventh_priority(self) -> AST:
         """
         OR
         """
-        left = self.sixth_precedence()
+        left = self.sixth_priority()
         result = left
 
         while self.current_token.type is TokenType.OR:
             token = self.current_token
             self.eat(token.type)
-            result = BinOp(left=left, op=token, right=self.sixth_precedence())
+            result = BinOp(left=left, op=token, right=self.sixth_priority())
 
         return result
 
     def expr(self) -> AST:
-        return self.seventh_precedence()
+        return self.seventh_priority()
 
     def parse(self) -> AST:
         node = self.program()
