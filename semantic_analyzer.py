@@ -1,4 +1,5 @@
-from astnodes import Compound, Var, Assign, Program, Block, VarDecl, ProcedureDecl, ProcedureCall
+from astnodes import Compound, Var, Assign, Program, Block, VarDecl, ProcedureDecl, ProcedureCall, Condition, Then, \
+    Else, BinOp
 from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
 from errors import SemanticError, ErrorCode
 from visitor import Visitor
@@ -23,6 +24,7 @@ class SemanticAnalyzer(Visitor):
         # initialize the built-in types when the symbol table instance is created.
         self.buildin_scope.define(BuildinTypeSymbol('INTEGER'))
         self.buildin_scope.define(BuildinTypeSymbol('REAL'))
+        self.buildin_scope.define(BuildinTypeSymbol('BOOLEAN'))
 
     def error(self, error_code, token):
         raise SemanticError(
@@ -30,9 +32,6 @@ class SemanticAnalyzer(Visitor):
             token=token,
             message=f'{error_code.value} -> {token}',
         )
-
-    def scope(self) -> ScopedSymbolTable:
-        return self.current_scope
 
     def visit_program(self, node: Program):
         # add global scoped symbol table
@@ -56,7 +55,8 @@ class SemanticAnalyzer(Visitor):
         for child in node.childrens:
             self.visit(child)
 
-    def visit_binop(self, node):
+    def visit_binop(self, node: BinOp):
+        # static type checker
         self.visit(node.left)
         self.visit(node.right)
 
@@ -78,6 +78,7 @@ class SemanticAnalyzer(Visitor):
         self.current_scope.define(var_symbol)
 
     def visit_assign(self, node: Assign):
+        # todo add static type checker
         # right-hand side
         self.visit(node.right)
         # left-hand side
@@ -139,3 +140,12 @@ class SemanticAnalyzer(Visitor):
                 error_code=ErrorCode.UNEXPECTED_PROC_ARGUMENTS_NUMBER,
                 token=node.token
             )
+
+    def visit_condition(self, node: Condition):
+        pass
+
+    def visit_then(self, node: Then):
+        pass
+
+    def visit_else(self, node: Else):
+        pass

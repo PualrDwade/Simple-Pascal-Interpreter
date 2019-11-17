@@ -1,5 +1,5 @@
-from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp,\
-    Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall
+from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, \
+    Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall, Condition, Then, Else, Boolean
 
 
 class Visitor(object):
@@ -35,13 +35,22 @@ class Visitor(object):
             return self.visit_procdecl(node)
         elif isinstance(node, ProcedureCall):
             return self.visit_proccall(node)
+        elif isinstance(node, Condition):
+            return self.visit_condition(node)
+        elif isinstance(node, Then):
+            return self.visit_then(node)
+        elif isinstance(node, Else):
+            return self.visit_else(node)
         else:
-            raise Exception("Invalid AST node")
+            raise Exception("Invalid AST node: %s" % node)
 
     def visit_binop(self, node: BinOp):
         pass
 
     def visit_num(self, node: Num):
+        pass
+
+    def visit_boolean(self, node: Boolean):
         pass
 
     def visit_unaryop(self, node: UnaryOp):
@@ -75,4 +84,13 @@ class Visitor(object):
         pass
 
     def visit_proccall(self, node: ProcedureCall):
+        pass
+
+    def visit_condition(self, node: Condition):
+        pass
+
+    def visit_then(self, node: Then):
+        pass
+
+    def visit_else(self, node: Else):
         pass

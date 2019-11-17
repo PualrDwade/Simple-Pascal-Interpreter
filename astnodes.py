@@ -23,11 +23,13 @@ class UnaryOp(AST):
 class Num(AST):
     def __init__(self, token: Token):
         self.token = token
+        self.value = token.value
 
 
 class Boolean(AST):
     def __init__(self, token: Token):
         self.token = token
+        self.value = True if token.value is 'TRUE' else False
 
 
 class Compound(AST):
@@ -42,7 +44,7 @@ class Var(AST):
 
 
 class Assign(AST):
-    def __init__(self, left: AST, op: Token, right: AST):
+    def __init__(self, left: Var, op: Token, right: AST):
         self.left = left
         self.token = self.op = op
         self.right = right

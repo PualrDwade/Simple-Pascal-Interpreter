@@ -1,5 +1,5 @@
-from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, \
-    Block, VarDecl, ProcedureDecl, ProcedureCall
+from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, Program, \
+    Block, VarDecl, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else
 from callstack import CallStack, Frame, FrameType
 from parser import Parser
 from semantic_analyzer import SemanticAnalyzer
@@ -17,30 +17,55 @@ class Interpreter(Visitor):
         self.analyzer = SemanticAnalyzer()
         self.callstack = CallStack()
 
-    @staticmethod
-    def log(msg):
+    def log(self, msg):
         print(msg)
 
     def visit_binop(self, node: BinOp):
+        left_val = self.visit(node.left)
+        right_val = self.visit(node.right)
+        # todo type checker
         if node.op.type is TokenType.PLUS:
-            return self.visit(node.left) + self.visit(node.right)
+            return left_val + right_val
         elif node.op.type is TokenType.MINUS:
-            return self.visit(node.left) - self.visit(node.right)
+            return left_val - right_val
         elif node.op.type is TokenType.MUL:
-            return self.visit(node.left) * self.visit(node.right)
+            return left_val * right_val
         elif node.op.type is TokenType.INTEGER_DIV:
-            return self.visit(node.left) // self.visit(node.right)
+            return left_val // right_val
         elif node.op.type is TokenType.FLOAT_DIV:
-            return self.visit(node.left) / self.visit(node.right)
+            return left_val / right_val
+        elif node.op.type is TokenType.MOD:
+            return left_val % right_val
+        elif node.op.type is TokenType.AND:
+            return left_val and right_val
+        elif node.op.type is TokenType.OR:
+            return left_val or right_val
+        elif node.op.type is TokenType.EQUALS:
+            return left_val == right_val
+        elif node.op.type is TokenType.NOT_EQUALS:
+            return left_val != right_val
+        elif node.op.type is TokenType.GREATER:
+            return left_val > right_val
+        elif node.op.type is TokenType.GREATER_EQUALS:
+            return left_val >= right_val
+        elif node.op.type is TokenType.LESS:
+            return left_val < right_val
+        elif node.op.type is TokenType.LESS_EQUALS:
+            return left_val <= right_val
 
     def visit_num(self, node: Num):
-        return node.token.value
+        return node.value
+
+    def visit_boolean(self, node: Boolean):
+        return node.value
 
     def visit_unaryop(self, node: UnaryOp):
         if node.op.type is TokenType.PLUS:
             return +self.visit(node.factor)
-        else:
+        if node.op.type is TokenType.MINUS:
             return -self.visit(node.factor)
+        if node.op.type is TokenType.NOT:
+            return not self.visit(node.factor)
 
     def visit_compound(self, node: Compound):
         for child in node.childrens:
@@ -57,9 +82,6 @@ class Interpreter(Visitor):
         var_value = self.visit(node.right)
         current_frame: Frame = self.callstack.peek()
         current_frame.set_value(var_name, var_value)
-
-    def visit_noop(self, node: NoOp):
-        pass
 
     def visit_program(self, node: Program):
         program_name = node.name
@@ -118,6 +140,18 @@ class Interpreter(Visitor):
 
         self.callstack.pop()
         self.log(f'LEAVE: PROCEDURE {proc_name}')
+
+    def visit_condition(self, node: Condition):
+        if self.visit(node.condition_node):
+            self.visit(node.then_node)
+        elif node.else_node is not None:
+            self.visit(node.else_node)
+
+    def visit_then(self, node: Then):
+        self.visit(node.child)
+
+    def visit_else(self, node: Else):
+        self.visit(node.child)
 
     def interpret(self):
         ast = self.parser.parse()

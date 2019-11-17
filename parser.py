@@ -187,7 +187,6 @@ class Parser(object):
     def condition_statement(self) -> Condition:
         """
         condition_statement : IF expr THEN (ELSE)?
-
         """
         token = self.current_token
         self.eat(TokenType.IF)
@@ -205,26 +204,20 @@ class Parser(object):
 
     def then(self) -> Then:
         """
-        THEN (compound|statement_list)
+        THEN statement
         """
         token = self.current_token
         self.eat(TokenType.THEN)
-        if self.current_token.type is TokenType.BEGIN:
-            child = self.compound_statement()
-        else:
-            child = self.statement_list()
+        child = self.statement()
         return Then(token=token, child=child)
 
     def _else(self) -> Else:
         """
-        ELSE (compound|statement_list)
+        ELSE statement
         """
         token = self.current_token
         self.eat(TokenType.ELSE)
-        if self.current_token.type is TokenType.BEGIN:
-            child = self.compound_statement()
-        else:
-            child = self.statement_list()
+        child = self.statement()
         return Else(token=token, child=child)
 
     def assignment_statement(self) -> Assign:

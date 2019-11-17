@@ -1,5 +1,4 @@
 from unittest import TestCase
-
 from astnodes import AST
 from parser import Parser
 from tokenizer import Tokenizer
