@@ -93,13 +93,13 @@ class ProcedureCall(AST):
 
 
 class Then(AST):
-    def __init__(self, token: Token, child: Compound):
+    def __init__(self, token: Token, child: AST):
         self.token = token
         self.child = child
 
 
 class Else(AST):
-    def __init__(self, token: Token, child: Compound):
+    def __init__(self, token: Token, child: AST):
         self.token = token
         self.child = child
 

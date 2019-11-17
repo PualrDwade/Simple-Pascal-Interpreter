@@ -1,5 +1,5 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
-    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean
+    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
@@ -168,7 +168,7 @@ class Parser(object):
         """
         statement : compound_statement
                   | proccall_statement
-                  | if_else_statement
+                  | condition_statement
                   | assignment_statement
                   | empty
         """
@@ -178,22 +178,56 @@ class Parser(object):
             node = self.proccall_statement()
         elif self.current_token.type is TokenType.ID:
             node = self.assignment_statement()
+        elif self.current_token.type is TokenType.IF:
+            node = self.condition_statement()
         else:
             node = self.empty()
         return node
 
-    def if_else_statement(self) -> AST:
+    def condition_statement(self) -> Condition:
         """
-        if_else_statement : if condition_statement then statement_list (else statement_list) ?
-        """
-        pass
+        condition_statement : IF expr THEN (ELSE)?
 
-    def condition_statement(self) -> AST:
         """
-        condition_statement : expr (EQUAL|LESS|LESS_EQUAL|GREATER|GREATER_EQUAL) expr
-        """
+        token = self.current_token
+        self.eat(TokenType.IF)
+        condition_node = self.expr()
+        then_node = self.then()
+        else_node = None
+        if self.current_token.type is TokenType.ELSE:
+            else_node = self._else()
+        return Condition(
+            token=token,
+            condition_node=condition_node,
+            then_node=then_node,
+            else_node=else_node
+        )
 
-    def assignment_statement(self) -> AST:
+    def then(self) -> Then:
+        """
+        THEN (compound|statement_list)
+        """
+        token = self.current_token
+        self.eat(TokenType.THEN)
+        if self.current_token.type is TokenType.BEGIN:
+            child = self.compound_statement()
+        else:
+            child = self.statement_list()
+        return Then(token=token, child=child)
+
+    def _else(self) -> Else:
+        """
+        ELSE (compound|statement_list)
+        """
+        token = self.current_token
+        self.eat(TokenType.ELSE)
+        if self.current_token.type is TokenType.BEGIN:
+            child = self.compound_statement()
+        else:
+            child = self.statement_list()
+        return Else(token=token, child=child)
+
+    def assignment_statement(self) -> Assign:
         """
         assignment_statement : variable ASSIGN expr
         """
