@@ -30,8 +30,8 @@ class TestParser(TestCase):
         var a : boolean;
         begin
             a := 3;
-            if a <= 2 and a + 3 <= 5 == true then
-                a := 6;
+            if a <= 2 and a + 3 <= 5 = true then
+                a := 6
             else if a + 4 <= 9 or a >= 7 then
                 begin
                     a := 7;

@@ -101,7 +101,6 @@ class Tokenizer(object):
             self.column += 1
 
     def skip_whitespace(self):
-        self.current_char.isspace()
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
 
