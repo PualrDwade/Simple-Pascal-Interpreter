@@ -35,6 +35,8 @@ class TestParser(TestCase):
                 begin
                     a := 7;
                 end
+            else if a <> 9 then
+                a := 9
             else
                 a := 8;
         end.
@@ -90,6 +92,25 @@ class TestParser(TestCase):
         begin {program}
             a := add(2+3,add(1,5));
         end. {program}
+        """
+        ast = run_parser(code)
+        assert ast is not None
+
+    def test_parse_while_loop(self):
+        code = """\
+        program main;
+        var a,b:integer;
+        begin
+            a := 0;
+            while a < 10 do
+            begin
+                a := a + 1;
+            end;
+            
+            b := 0;
+            while b <> 10 do
+                b := b + 2
+        end.
         """
         ast = run_parser(code)
         assert ast is not None

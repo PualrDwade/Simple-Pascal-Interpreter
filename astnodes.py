@@ -129,5 +129,20 @@ class Condition(AST):
         self.else_node = else_node
 
 
+class WhileLoop(AST):
+    def __init__(self, token: Token, condition_node: AST, body_node: AST):
+        self.token = token
+        self.conditon_node = condition_node
+        self.body_node = body_node
+
+
+class Continue(AST):
+    pass
+
+
+class Break(AST):
+    pass
+
+
 class NoOp(AST):
     pass

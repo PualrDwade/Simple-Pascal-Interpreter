@@ -1,5 +1,6 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
-    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall
+    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall, \
+    WhileLoop
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
@@ -203,6 +204,7 @@ class Parser(object):
         statement : compound_statement
                   | proccall_statement
                   | condition_statement
+                  | while_statement
                   | assignment_statement
                   | empty
         """
@@ -214,6 +216,8 @@ class Parser(object):
             node = self.assignment_statement()
         elif self.current_token.type is TokenType.IF:
             node = self.condition_statement()
+        elif self.current_token.type is TokenType.WHILE:
+            node = self.while_statement()
         else:
             node = self.empty()
         return node
@@ -253,6 +257,17 @@ class Parser(object):
         self.eat(TokenType.ELSE)
         child = self.statement()
         return Else(token=token, child=child)
+
+    def while_statement(self) -> WhileLoop:
+        """
+        while_statement : WHILE expr DO statement
+        """
+        token = self.current_token
+        self.eat(TokenType.WHILE)
+        condition_node = self.expr()
+        self.eat(TokenType.DO)
+        body_node = self.statement()
+        return WhileLoop(token=token, condition_node=condition_node, body_node=body_node)
 
     def assignment_statement(self) -> Assign:
         """
