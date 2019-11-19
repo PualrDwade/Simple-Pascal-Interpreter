@@ -1,7 +1,6 @@
-from astnodes import Compound, Var, Assign, Program, Block, VarDecl, ProcedureDecl, ProcedureCall, Condition, Then, \
-    Else, BinOp
-from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
+from astnodes import Compound, Var, Assign, Program, Block, VarDecl, ProcedureDecl, ProcedureCall, BinOp
 from errors import SemanticError, ErrorCode
+from symbol_table import ScopedSymbolTable, VarSymbol, ProcedureSymbol, BuildinTypeSymbol
 from visitor import Visitor
 
 
@@ -140,12 +139,3 @@ class SemanticAnalyzer(Visitor):
                 error_code=ErrorCode.UNEXPECTED_PROC_ARGUMENTS_NUMBER,
                 token=node.token
             )
-
-    def visit_condition(self, node: Condition):
-        pass
-
-    def visit_then(self, node: Then):
-        pass
-
-    def visit_else(self, node: Else):
-        pass

@@ -43,3 +43,38 @@ class TestInterpreter(TestCase):
         end.
         """
         run_code(code)
+
+    def test_funccall(self):
+        code = """\
+        program main;
+        
+        var result:integer;
+        
+        function sum(a,b:integer):integer;
+        begin
+            sum := a + b;
+        end;
+        
+        begin
+            result := sum(2,5); 
+        end.
+        """
+        run_code(code)
+
+    def test_recursion(self):
+        code = """\
+        program main;
+        
+        var result:integer;
+        
+        function fibonacci(n:integer):integer;
+        begin
+            if n = 0 or n = 1 then fibonacci := n
+            else fibonacci := fibonacci(n-1) + fibonacci(n-2)
+        end; 
+        
+        begin
+            result := fibonacci(10);
+        end.
+        """
+        run_code(code)

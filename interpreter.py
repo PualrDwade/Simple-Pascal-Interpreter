@@ -1,10 +1,11 @@
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, Program, \
-    Block, VarDecl, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else
+    Block, VarDecl, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall
 from callstack import CallStack, Frame, FrameType
 from parser import Parser
 from semantic_analyzer import SemanticAnalyzer
 from tokens import TokenType
 from visitor import Visitor
+from errors import RuntimeError, ErrorCode
 
 
 class Interpreter(Visitor):
@@ -16,6 +17,13 @@ class Interpreter(Visitor):
         self.parser = parser
         self.analyzer = SemanticAnalyzer()
         self.callstack = CallStack()
+
+    def error(self, error_code: ErrorCode, token):
+        raise RuntimeError(
+            error_code=error_code,
+            token=token,
+            message=f'{error_code.value} -> {token}',
+        )
 
     def log(self, msg):
         print(msg)
@@ -81,7 +89,10 @@ class Interpreter(Visitor):
         var_name = node.left.name  # get variable's name
         var_value = self.visit(node.right)
         current_frame: Frame = self.callstack.peek()
-        current_frame.set_value(var_name, var_value)
+        if current_frame.type is FrameType.FUNCTION and current_frame.name == var_name:
+            current_frame.return_val = var_value
+        else:
+            current_frame.set_value(var_name, var_value)
 
     def visit_program(self, node: Program):
         program_name = node.name
@@ -140,6 +151,40 @@ class Interpreter(Visitor):
 
         self.callstack.pop()
         self.log(f'LEAVE: PROCEDURE {proc_name}')
+
+    def visit_funcdecl(self, node: FunctionDecl):
+        func_name = node.token.value
+        current_frame: Frame = self.callstack.peek()
+        current_frame.define(func_name)
+        current_frame.set_value(func_name, node)
+
+    def visit_funccall(self, node: FunctionCall):
+        current_frame = self.callstack.peek()
+        func_name = node.func_name
+        func_node: FunctionDecl = current_frame.get_value(func_name)
+
+        self.log(f'ENTER: FUNCTION {func_name}')
+        func_frame = Frame(name=func_name, type=FrameType.FUNCTION)
+        self.callstack.push(func_frame)
+        current_frame: Frame = self.callstack.peek()
+
+        # get actual params values to formal params
+        actual_param_values = [self.visit(actual_param)
+                               for actual_param in node.actual_params]
+
+        for (formal_param, actual_param_value) in zip(func_node.params, actual_param_values):
+            current_frame.define(formal_param.var_node.name)
+            current_frame.set_value(formal_param.var_node.name, actual_param_value)
+
+        self.visit(func_node.block)
+        self.log(str(self.callstack))
+        self.log(f'LEAVE: FUNCTION {func_name}')
+
+        return_val = current_frame.return_val
+        self.callstack.pop()
+        if return_val is None:
+            self.error(error_code=ErrorCode.MISSING_RETURN, token=node.token)
+        return return_val
 
     def visit_condition(self, node: Condition):
         if self.visit(node.condition_node):

@@ -7,6 +7,7 @@ class ErrorCode(Enum):
     DUPLICATE_ID = 'Duplicate id found'
     DUPLICATE_PROC_DECL = 'Duplicate procedure found'
     UNEXPECTED_PROC_ARGUMENTS_NUMBER = 'Unexpected procedure arguments number'
+    MISSING_RETURN = 'Function missing return value'
 
 
 class Error(Exception):
@@ -27,4 +28,8 @@ class ParserError(Error):
 
 
 class SemanticError(Error):
+    pass
+
+
+class RuntimeError(Error):
     pass

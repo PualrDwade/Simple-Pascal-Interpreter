@@ -4,6 +4,7 @@ from enum import Enum
 class FrameType(Enum):
     PROGRAM = 'PROGRAM'
     PROCEDURE = 'PROCEDURE'
+    FUNCTION = 'FUNCTION'
 
 
 class Frame(object):
@@ -12,6 +13,7 @@ class Frame(object):
         self.name = name
         self.type = type
         self.nesting_level = None
+        self.return_val = None
         self.members = {}
 
     def define(self, key):

@@ -36,6 +36,10 @@ class Visitor(object):
             return self.visit_procdecl(node)
         elif isinstance(node, ProcedureCall):
             return self.visit_proccall(node)
+        elif isinstance(node, FunctionDecl):
+            return self.visit_funcdecl(node)
+        elif isinstance(node, FunctionCall):
+            return self.visit_funccall(node)
         elif isinstance(node, Condition):
             return self.visit_condition(node)
         elif isinstance(node, Then):
