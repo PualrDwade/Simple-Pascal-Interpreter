@@ -22,7 +22,6 @@ class TestParser(TestCase):
         """
         ast = run_parser(code)
         assert ast is not None
-        print(ast)
 
     def test_parse_condition(self):
         code = """\
@@ -42,4 +41,55 @@ class TestParser(TestCase):
         """
         ast = run_parser(code)
         assert ast is not None
-        print(ast)
+
+    def test_parse_procdecl(self):
+        code = """\
+        program main;
+        var 
+            a:boolean;
+        procedure add(a:integer;b:integer);
+        begin
+        end;
+        
+        procedure set;
+        begin
+        end;
+        
+        begin
+        end.
+        """
+        ast = run_parser(code)
+        assert ast is not None
+
+    def test_parse_funcdecl(self):
+        code = """\
+        program main;
+        
+        function add(a:integer;b:integer):boolean;
+        begin
+        end;
+        
+        function delete(item:real):integer;
+        begin
+        end;
+        
+        begin {program}
+        end. {program}
+        """
+        ast = run_parser(code)
+        assert ast is not None
+
+    def test_parse_funccall(self):
+        code = """\
+        program main;
+        var a: integer;
+        function add(a:integer;b:integer):integer;
+        begin
+        end;
+        
+        begin {program}
+            a := add(2+3,add(1,5));
+        end. {program}
+        """
+        ast = run_parser(code)
+        assert ast is not None

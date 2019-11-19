@@ -34,6 +34,7 @@ class TokenType(Enum):
     REAL = 'REAL'
     VAR = 'VAR'
     PROCEDURE = 'PROCEDURE'
+    FUNCTION = 'FUNCTION'
     IF = 'IF'
     THEN = 'THEN'
     ELSE = 'ELSE'

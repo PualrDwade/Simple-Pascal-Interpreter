@@ -1,5 +1,6 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, \
-    Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall, Condition, Then, Else, Boolean
+    Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall, Condition, Then, Else, Boolean, FunctionCall, \
+    FunctionDecl
 
 
 class Visitor(object):
@@ -84,6 +85,12 @@ class Visitor(object):
         pass
 
     def visit_proccall(self, node: ProcedureCall):
+        pass
+
+    def visit_funcdecl(self, node: FunctionDecl):
+        pass
+
+    def visit_funccall(self, node: FunctionCall):
         pass
 
     def visit_condition(self, node: Condition):

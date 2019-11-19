@@ -1,5 +1,5 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
-    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else
+    Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall
 from errors import ParserError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
@@ -53,16 +53,20 @@ class Parser(object):
         """
         declarations = []
 
-        if self.current_token.type == TokenType.VAR:
+        if self.current_token.type is TokenType.VAR:
             self.eat(TokenType.VAR)
-            while self.current_token.type == TokenType.ID:
+            while self.current_token.type is TokenType.ID:
                 var_decl = self.variable_declaration()
                 declarations.extend(var_decl)
                 self.eat(TokenType.SEMI)
 
-        while self.current_token.type == TokenType.PROCEDURE:
+        while self.current_token.type is TokenType.PROCEDURE:
             proc_decl = self.procedure_declaration()
             declarations.append(proc_decl)
+
+        while self.current_token.type is TokenType.FUNCTION:
+            func_decl = self.function_declaration()
+            declarations.append(func_decl)
 
         return declarations
 
@@ -75,22 +79,52 @@ class Parser(object):
         self.eat(TokenType.ID)
         params = []
 
-        if self.current_token.type == TokenType.LPAREN:
+        if self.current_token.type is TokenType.LPAREN:
             self.eat(TokenType.LPAREN)
             params = self.formal_parameter_list()
             self.eat(TokenType.RPAREN)
 
         self.eat(TokenType.SEMI)
         block_node = self.block()
-        proc_decl = ProcedureDecl(proc_token, params, block_node)
+        proc_decl = ProcedureDecl(
+            token=proc_token,
+            params=params,
+            block=block_node)
         self.eat(TokenType.SEMI)
         return proc_decl
+
+    def function_declaration(self) -> FunctionDecl:
+        """function_declaration :
+            FUNCTION ID (LPAREN formal_parameter_list RPAREN)? COLON type_spec SEMI block SEMI
+        """
+        self.eat(TokenType.FUNCTION)
+        func_token = self.current_token
+        self.eat(TokenType.ID)
+        params = []
+
+        if self.current_token.type is TokenType.LPAREN:
+            self.eat(TokenType.LPAREN)
+            params = self.formal_parameter_list()
+            self.eat(TokenType.RPAREN)
+
+        self.eat(TokenType.COLON)
+        type_node = self.type_spec()
+        self.eat(TokenType.SEMI)
+        block_node = self.block()
+        self.eat(TokenType.SEMI)
+        func_decl = FunctionDecl(
+            token=func_token,
+            params=params,
+            block=block_node,
+            return_type=type_node
+        )
+        return func_decl
 
     def formal_parameter_list(self) -> List[Param]:
         """ formal_parameter_list : formal_parameters
                               | formal_parameters SEMI formal_parameter_list
         """
-        if not self.current_token.type is TokenType.ID:
+        if self.current_token.type is not TokenType.ID:
             return []
 
         params = self.formal_parameters()
@@ -246,7 +280,36 @@ class Parser(object):
                 actual_params.append(self.expr())
 
             self.eat(TokenType.RPAREN)
-            return ProcedureCall(procc_token.value, actual_params, procc_token)
+            return ProcedureCall(
+                proc_name=procc_token.value,
+                actual_params=actual_params,
+                token=procc_token
+            )
+
+    def funccall_statement(self) -> FunctionCall:
+        """funccall_statement : ID LPAREN (expr (COMMA expr)*)? RPAREN"""
+        funccall_token = self.current_token
+        self.eat(TokenType.ID)
+        self.eat(TokenType.LPAREN)
+
+        if self.current_token.type is TokenType.RPAREN:
+            self.eat(TokenType.RPAREN)
+            return FunctionCall(
+                func_name=funccall_token.value,
+                actual_params=[],
+                token=funccall_token
+            )
+        else:
+            actual_params = [self.expr()]
+            while self.current_token.type is TokenType.COMMA:
+                self.eat(TokenType.COMMA)
+                actual_params.append(self.expr())
+
+            self.eat(TokenType.RPAREN)
+            return FunctionCall(
+                func_name=funccall_token.value,
+                actual_params=actual_params,
+                token=funccall_token)
 
     def variable(self) -> Var:
         """
@@ -271,6 +334,7 @@ class Parser(object):
               | FALSE
               | LPAREN expr RPAREN
               | variable
+              | funccall
         """
         token = self.current_token
         if token.type is TokenType.PLUS:
@@ -306,6 +370,9 @@ class Parser(object):
             node = self.expr()
             self.eat(TokenType.RPAREN)
             return node
+
+        elif token.type is TokenType.ID and self.tokenizer.current_char is '(':
+            return self.funccall_statement()
 
         else:
             return self.variable()

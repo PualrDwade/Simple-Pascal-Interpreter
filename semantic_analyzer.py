@@ -95,7 +95,7 @@ class SemanticAnalyzer(Visitor):
             )
 
     def visit_procdecl(self, node: ProcedureDecl):
-        proc_name = node.proc_token.value
+        proc_name = node.token.value
         proc_symbol = ProcedureSymbol(proc_name)
         if self.current_scope.lookup(proc_name, current_scope_only=True) is not None:
             self.error(

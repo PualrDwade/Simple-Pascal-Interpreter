@@ -109,7 +109,7 @@ class Interpreter(Visitor):
         current_frame.define(var_name)
 
     def visit_procdecl(self, node: ProcedureDecl):
-        proc_name = node.proc_token.value
+        proc_name = node.token.value
         current_frame: Frame = self.callstack.peek()
         current_frame.define(proc_name)
         current_frame.set_value(proc_name, node)
