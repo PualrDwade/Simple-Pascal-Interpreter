@@ -1,6 +1,14 @@
 from enum import Enum
 
 
+class BreakError(Exception):
+    pass
+
+
+class ContinueError(Exception):
+    pass
+
+
 class ErrorCode(Enum):
     UNEXPECTED_TOKEN = 'Unexpected token'
     ID_NOT_FOUND = 'Identifier not found'
@@ -8,6 +16,8 @@ class ErrorCode(Enum):
     DUPLICATE_PROC_DECL = 'Duplicate procedure found'
     UNEXPECTED_PROC_ARGUMENTS_NUMBER = 'Unexpected procedure arguments number'
     MISSING_RETURN = 'Function missing return value'
+    BREAK_OUTSIDE_LOOP = 'Break outside loop'
+    CONTINUE_OUTSIDE_LOOP = 'Continue outside loop'
 
 
 class Error(Exception):
@@ -23,7 +33,7 @@ class LexerError(Error):
     pass
 
 
-class ParserError(Error):
+class SyntaxError(Error):
     pass
 
 

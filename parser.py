@@ -1,7 +1,7 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, Program, Block, \
     Param, VarDecl, Type, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall, \
-    WhileLoop
-from errors import ParserError, ErrorCode
+    WhileLoop, Continue, Break
+from errors import SyntaxError, ErrorCode
 from tokenizer import Tokenizer
 from tokens import TokenType
 from typing import List
@@ -13,7 +13,7 @@ class Parser(object):
         self.current_token = self.tokenizer.get_next_token()
 
     def error(self, error_code, token):
-        raise ParserError(
+        raise SyntaxError(
             error_code=error_code,
             token=token,
             message=f'{error_code.value} -> {token}',
@@ -206,6 +206,8 @@ class Parser(object):
                   | condition_statement
                   | while_statement
                   | assignment_statement
+                  | break
+                  | continue
                   | empty
         """
         if self.current_token.type is TokenType.BEGIN:
@@ -218,6 +220,10 @@ class Parser(object):
             node = self.condition_statement()
         elif self.current_token.type is TokenType.WHILE:
             node = self.while_statement()
+        elif self.current_token.type is TokenType.CONTINUE:
+            node = self.continue_statement()
+        elif self.current_token.type is TokenType.BREAK:
+            node = self.break_statement()
         else:
             node = self.empty()
         return node
@@ -268,6 +274,16 @@ class Parser(object):
         self.eat(TokenType.DO)
         body_node = self.statement()
         return WhileLoop(token=token, condition_node=condition_node, body_node=body_node)
+
+    def continue_statement(self) -> Continue:
+        token = self.current_token
+        self.eat(TokenType.CONTINUE)
+        return Continue(token)
+
+    def break_statement(self) -> Break:
+        token = self.current_token
+        self.eat(TokenType.BREAK)
+        return Break(token)
 
     def assignment_statement(self) -> Assign:
         """

@@ -78,3 +78,18 @@ class TestInterpreter(TestCase):
         end.
         """
         run_code(code)
+
+    def test_while_loop(self):
+        code = """\
+        program main;
+        var a:integer;
+        begin
+            a := 0;
+            while a <> 10 do
+            begin
+                a := a + 1;
+                if a = 8 then break;
+            end;
+        end.
+        """
+        run_code(code)

@@ -1,11 +1,12 @@
 from astnodes import BinOp, Num, UnaryOp, Compound, Var, Assign, Program, \
-    Block, VarDecl, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall
+    Block, VarDecl, ProcedureDecl, ProcedureCall, Boolean, Condition, Then, Else, FunctionDecl, FunctionCall, WhileLoop, \
+    Continue, Break
 from callstack import CallStack, Frame, FrameType
 from parser import Parser
 from semantic_analyzer import SemanticAnalyzer
 from tokens import TokenType
 from visitor import Visitor
-from errors import RuntimeError, ErrorCode
+from errors import RuntimeError, ErrorCode, ContinueError, BreakError
 
 
 class Interpreter(Visitor):
@@ -197,6 +198,21 @@ class Interpreter(Visitor):
 
     def visit_else(self, node: Else):
         self.visit(node.child)
+
+    def visit_while(self, node: WhileLoop):
+        while self.visit(node.conditon_node) is True:
+            try:
+                self.visit(node.body_node)
+            except ContinueError:
+                continue
+            except BreakError:
+                break
+
+    def visit_continue(self, node: Continue):
+        raise ContinueError()
+
+    def visit_break(self, node: Break):
+        raise BreakError()
 
     def interpret(self):
         ast = self.parser.parse()

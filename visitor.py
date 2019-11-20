@@ -1,6 +1,6 @@
 from astnodes import AST, BinOp, Num, UnaryOp, Compound, Var, Assign, NoOp, \
     Program, Block, VarDecl, Type, ProcedureDecl, ProcedureCall, Condition, Then, Else, Boolean, FunctionCall, \
-    FunctionDecl
+    FunctionDecl, WhileLoop, Continue, Break
 
 
 class Visitor(object):
@@ -46,6 +46,12 @@ class Visitor(object):
             return self.visit_then(node)
         elif isinstance(node, Else):
             return self.visit_else(node)
+        elif isinstance(node, WhileLoop):
+            return self.visit_while(node)
+        elif isinstance(node, Continue):
+            return self.visit_continue(node)
+        elif isinstance(node, Break):
+            return self.visit_break(node)
         else:
             raise Exception("Invalid AST node: %s" % node)
 
@@ -104,4 +110,13 @@ class Visitor(object):
         pass
 
     def visit_else(self, node: Else):
+        pass
+
+    def visit_while(self, node: WhileLoop):
+        pass
+
+    def visit_continue(self, node: Continue):
+        pass
+
+    def visit_break(self, node: Break):
         pass

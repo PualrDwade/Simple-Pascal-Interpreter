@@ -137,11 +137,13 @@ class WhileLoop(AST):
 
 
 class Continue(AST):
-    pass
+    def __init__(self, token: Token):
+        self.token = token
 
 
 class Break(AST):
-    pass
+    def __init__(self, token: Token):
+        self.token = token
 
 
 class NoOp(AST):
